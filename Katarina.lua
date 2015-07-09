@@ -223,13 +223,13 @@ class 'Katarina'
 			if _G.AutoCarry then
 				print("<font color=\"#FF0000\">[Nintendo Katarina]:</font> <font color=\"#FFFFFF\">Found SAC Disabling SxOrb</font>")
 				if self.menu.orbwalk.General.Enabled and self.menu.orbwalk.General.Enabled == true then
-			 		self.menu.orbwalk.General.Enabled = false
+			 		self.menu.orbwalk.General.Enabled = true
 			 	end
 				self.comp = true
 			 elseif _G.MMA_Loaded then
 			 	print("<font color=\"#FF0000\">[Nintendo Katarina]:</font> <font color=\"#FFFFFF\">Found MMA Disabling SxOrb</font>")
 			 	if self.menu.orbwalk.General.Enabled and self.menu.orbwalk.General.Enabled == true then
-			 		self.menu.orbwalk.General.Enabled = false
+			 		self.menu.orbwalk.General.Enabled = true
 			 	end
 			 	self.comp = true
 			 end

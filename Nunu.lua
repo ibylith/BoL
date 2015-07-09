@@ -1,5 +1,5 @@
 if myHero.charName ~= "Nunu"  or not VIP_USER then return end
-local version = 0.8
+local version = 0.9
 local AUTOUPDATE = true
 local SCRIPT_NAME = "SXNunu"
 require 'VPrediction'
@@ -36,7 +36,7 @@ local target = nil
 
 function CheckUpdate()
         local scriptName = "SXNunu"
-        local version = 1.8
+        local version = 1.9
         local ToUpdate = {}
         ToUpdate.Version = version
         ToUpdate.Host = "raw.githubusercontent.com"
@@ -231,8 +231,8 @@ function initComponents()
    Menu.Ads.KS:addParam("ignite", "Use Ignite", SCRIPT_PARAM_ONOFF, false)
   Menu.Ads.KS:addParam("igniteRange", "Minimum range to cast Ignite", SCRIPT_PARAM_SLICE, 470, 0, 600, 0)
   Menu.Ads:addSubMenu("VIP", "VIP")
-    Menu.Ads.VIP:addParam("skin", "Use custom skin", SCRIPT_PARAM_ONOFF, false)
-  Menu.Ads.VIP:addParam("skin1", "Skin changer", SCRIPT_PARAM_SLICE, 1, 1, 6)
+   -- Menu.Ads.VIP:addParam("skin", "Use custom skin", SCRIPT_PARAM_ONOFF, false)
+ -- Menu.Ads.VIP:addParam("skin1", "Skin changer", SCRIPT_PARAM_SLICE, 1, 1, 6)
     
 --[[ Menu:addSubMenu("["..myHero.charName.." - Target Selector]", "targetSelector")
  Menu.targetSelector:addTS(ts)

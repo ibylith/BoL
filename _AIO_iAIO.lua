@@ -1,7 +1,7 @@
 local AUTOUPDATES = true
 local SCRIPTSTATUS = true
 local ScriptName = "iCreative's AIO"
-local version = 1.083
+local version = 1.086
 local champions = {
     ["Riven"]           = true,
     ["Xerath"]          = true,
@@ -123,7 +123,7 @@ function OnLoad()
         champ = _Yasuo()
     end
 
-    if champ~=nil then
+    if champ ~= nil then
         PrintMessage(ScriptName, champ.ScriptName.." by "..champ.Author.." loaded, Have Fun!.")
     end
 end
@@ -238,8 +238,8 @@ function _Yasuo:LoadMenu()
     self.Menu:addSubMenu(myHero.charName.." - Key Settings", "Keys")
         OrbwalkManager:LoadCommonKeys(self.Menu.Keys)
         self.Menu.Keys:addParam("StackQ", "Stack Q With Minions (Toggle)", SCRIPT_PARAM_ONKEYTOGGLE, true, string.byte("L"))
-        self.Menu.Keys:addParam("Run", "Run", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("T"))
         self.Menu.Keys:permaShow("StackQ")
+        self.Menu.Keys:addParam("Run", "Run", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("T"))
         self.Menu.Keys.Run = false
 
     AddTickCallback(
@@ -271,7 +271,7 @@ function _Yasuo:LoadMenu()
                 self.RSpell:Cast(self.TS.target)
             end
 
-            if not OrbwalkManager:IsCombo() and self.QSpell:IsReady() and self.Menu.Keys.StackQ and OrbwalkManager:CanMove() and self.QState < 3 and not self.Menu.Keys.Run then
+            if self.Menu.Keys.StackQ and not OrbwalkManager:IsCombo() and self.QSpell:IsReady() and OrbwalkManager:CanMove() and self.QState < 3 and not self.Menu.Keys.Run then
                 self.EnemyMinions:update()
                 for i, object in ipairs(self.EnemyMinions.objects) do
                     if self.QSpell:IsReady() and self.QSpell:ValidTarget(object) then
@@ -348,7 +348,7 @@ end
 
 function _Yasuo:KillSteal()
     for idx, enemy in ipairs(GetEnemyHeroes()) do
-        if enemy.health/enemy.maxHealth < 0.4 and ValidTarget(enemy, self.TS.range) and enemy.visible then
+        if enemy.health/enemy.maxHealth < 0.3 and ValidTarget(enemy, self.TS.range) and enemy.visible then
             local q, w, e, r, dmg = GetBestCombo(enemy)
             if dmg >= enemy.health then
                 if self.Menu.KillSteal.Q and ( q or self.QSpell:Damage(enemy) > enemy.health) then 
@@ -2656,7 +2656,7 @@ function _Orianna:LoadVariables()
     self.TS = TargetSelector(TARGET_LESS_CAST_PRIORITY, self.Q.Range + self.Q.Width, DAMAGE_MAGIC)
     self.EnemyMinions = minionManager(MINION_ENEMY, self.Q.Range + self.Q.Width, myHero, MINION_SORT_MAXHEALTH_DEC)
     self.JungleMinions = minionManager(MINION_JUNGLE, 600, myHero, MINION_SORT_MAXHEALTH_DEC)
-    self.Menu = scriptConfig(self.ScriptName.." by "..self.Author, self.ScriptName.."17052015")
+    self.Menu = scriptConfig(self.ScriptName.." by "..self.Author, self.ScriptName.."06072015")
     self.LastFarmRequest = 0
     self.Position = myHero
     self.TimeLimit = 0.1
@@ -2667,9 +2667,9 @@ function _Orianna:LoadVariables()
             self.Position = object
         end
     end
-    self.QSpell = _Spell(self.Q):AddDraw()
+    self.QSpell = _Spell(self.Q):AddDraw():AddSourceFunction(function() return self.Position end):AddDrawSourceFunction(function() return myHero end)
     self.WSpell = _Spell(self.W):AddDraw():AddSourceFunction(function() return self.Position end)
-    self.ESpell = _Spell(self.E):AddDraw()
+    self.ESpell = _Spell(self.E):AddDraw():AddSourceFunction(function() return self.Position end):AddDrawSourceFunction(function() return myHero end)
     self.RSpell = _Spell(self.R):AddDraw():AddSourceFunction(function() return self.Position end)
 end
 
@@ -2698,7 +2698,7 @@ function _Orianna:LoadMenu()
     self.Menu:addSubMenu(myHero.charName.." - LaneClear Settings", "LaneClear")
         self.Menu.LaneClear:addParam("useQ", "Use Q If Hit >= ", SCRIPT_PARAM_SLICE, 3, 0, 10)
         self.Menu.LaneClear:addParam("useW", "Use W If Hit >=", SCRIPT_PARAM_SLICE, 3, 0, 10)
-        self.Menu.LaneClear:addParam("useE", "Use E If Hit >=", SCRIPT_PARAM_SLICE, 3, 0, 10)
+        self.Menu.LaneClear:addParam("useE", "Use E If Hit >=", SCRIPT_PARAM_SLICE, 6, 0, 10)
         self.Menu.LaneClear:addParam("Mana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 30, 0, 100, 0)
 
     self.Menu:addSubMenu(myHero.charName.." - JungleClear Settings", "JungleClear")
@@ -2707,7 +2707,7 @@ function _Orianna:LoadMenu()
         self.Menu.JungleClear:addParam("useE", "Use E", SCRIPT_PARAM_ONOFF, true)
 
     self.Menu:addSubMenu(myHero.charName.." - LastHit Settings", "LastHit")
-        self.Menu.LastHit:addParam("useQ", "Use Q", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.LastHit:addParam("UseQ", "Use Q", SCRIPT_PARAM_LIST, 2, {"Never", "Smart", "Always"})
         self.Menu.LastHit:addParam("useW", "Use W", SCRIPT_PARAM_ONOFF, true)
         self.Menu.LastHit:addParam("useE", "Use E", SCRIPT_PARAM_ONOFF, false)
         self.Menu.LastHit:addParam("Mana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 30, 0, 100, 0)
@@ -2731,7 +2731,7 @@ function _Orianna:LoadMenu()
 
     self.Menu:addSubMenu(myHero.charName.." - Misc Settings", "Misc")
         self.Menu.Misc:addParam("overkill", "Overkill % for Dmg Predict..", SCRIPT_PARAM_SLICE, 10, 0, 100, 0)
-        if VIP_USER then self.Menu.Misc:addParam("BlockR", "Block R If Will Not Hit", SCRIPT_PARAM_ONOFF, false) end
+        if VIP_USER then self.Menu.Misc:addParam("BlockR", "Block R If Will Not Hit", SCRIPT_PARAM_ONOFF, true) end
         self.Menu.Misc:addParam("developer", "Developer Mode", SCRIPT_PARAM_ONOFF, false)
 
     self.Menu:addSubMenu(myHero.charName.." - Drawing Settings", "Draw")
@@ -2881,7 +2881,8 @@ end
 
 function _Orianna:CastQ(target)
     if ValidTarget(target, self.Q.Range) and self.Q.IsReady() then
-        self.QSpell:Cast(target, {Source = self.Position})
+        if GetDistanceSqr(self.Position, target) > math.pow(self.QSpell.Range * 1.8, 2) then self:CastE(myHero) end
+        self.QSpell:Cast(target)
     end
 end
 
@@ -2944,7 +2945,7 @@ function _Orianna:Combo()
         if self.W.IsReady() and self.Menu.Combo.useW > 0 and #self.WSpell:ObjectsInArea(GetEnemyHeroes()) >= self.Menu.Combo.useW then
             CastSpell(self.W.Slot)
         end
-        if self.Menu.Combo.useR and self.R.IsReady() and #self:ObjectsInArea(self.Q.Range, self.R.Delay, GetEnemyHeroes()) <= 3 then
+        if self.Menu.Combo.useR and self.R.IsReady() and #self:ObjectsInArea(self.Q.Range * 1.5, self.R.Delay, GetEnemyHeroes()) <= 3 then
             local q, w, e, r, dmg = GetBestCombo(target)
             if dmg >= target.health and r then
                 self:CastR(target)
@@ -3003,6 +3004,9 @@ function _Orianna:Clear()
                 end
                 self.LastFarmRequest = os.clock()
             end
+        end
+        if self.Menu.LastHit.UseQ > 1 then
+            self.QSpell:LastHit({ Mode = self.Menu.LastHit.UseQ})
         end
     end
 
@@ -3132,8 +3136,8 @@ function _Orianna:LastHit()
         if self.Menu.LastHit.useW then
             self.WSpell:LastHit()
         end
-        if self.Menu.LastHit.useQ then
-            self.QSpell:LastHit()
+        if self.Menu.LastHit.UseQ > 1 then
+            self.QSpell:LastHit({ Mode = self.Menu.LastHit.UseQ})
         end
         for i, minion in pairs(self.EnemyMinions.objects) do
             if ((not ValidTarget(minion, self.AA.Range(minion))) or (ValidTarget(minion, self.AA.Range(minion)) and GetDistanceSqr(minion, OrbwalkManager.LastTarget) > 80 * 80 and not OrbwalkManager:CanAttack() and OrbwalkManager:CanMove())) and not minion.dead then
@@ -3936,38 +3940,39 @@ function _Riven:LoadMenu()
     AddTickCallback(function() self:OnTick() end)
     AddProcessSpellCallback(function(unit, spell) self:OnProcessSpell(unit, spell) end)
     self.LastStack = 0
-
-    AddApplyBuffCallback(
-        function(source, unit, buff)
-            if unit and source and buff and unit.isMe and buff.name:lower():find("rivenpassiveaaboost") then
-                self.LastStack = 1
-            end
-        end
-    )
-    AddUpdateBuffCallback(
-        function(unit, buff, stacks)
-            if unit and buff and stacks and unit.isMe and buff.name:lower():find("rivenpassiveaaboost") then
-                if self.LastStack == stacks + 1 then
-                    if not OrbwalkManager:CanMove() then
-                        OrbwalkManager:ResetMove()
-                    end
+    if VIP_USER then
+        AddApplyBuffCallback(
+            function(source, unit, buff)
+                if unit and source and buff and unit.isMe and buff.name:lower():find("rivenpassiveaaboost") then
+                    self.LastStack = 1
                 end
-                self.LastStack = stacks
             end
-        end
-    )
-    AddRemoveBuffCallback(
-        function(unit, buff)
-            if unit and buff and unit.isMe and buff.name:lower():find("rivenpassiveaaboost") then
-                if self.LastStack == 1 then
-                    if not OrbwalkManager:CanMove() then
-                        OrbwalkManager:ResetMove()
+        )
+        AddUpdateBuffCallback(
+            function(unit, buff, stacks)
+                if unit and buff and stacks and unit.isMe and buff.name:lower():find("rivenpassiveaaboost") then
+                    if self.LastStack == stacks + 1 then
+                        if not OrbwalkManager:CanMove() then
+                            OrbwalkManager:ResetMove()
+                        end
                     end
+                    self.LastStack = stacks
                 end
-                self.LastStack = 0
             end
-        end
-    )
+        )
+        AddRemoveBuffCallback(
+            function(unit, buff)
+                if unit and buff and unit.isMe and buff.name:lower():find("rivenpassiveaaboost") then
+                    if self.LastStack == 1 then
+                        if not OrbwalkManager:CanMove() then
+                            OrbwalkManager:ResetMove()
+                        end
+                    end
+                    self.LastStack = 0
+                end
+            end
+        )
+    end
     AddAnimationCallback(
         function(unit, animationName)
             if unit.isMe then

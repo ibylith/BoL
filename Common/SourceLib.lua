@@ -3,34 +3,9 @@
 local autoUpdate   = true
 local silentUpdate = false
 
-local version = 1.076
+local version = 4.182 -- 1.2 by dienofail to fix bilbao's fix of other people's fix of honda's stuff
 
 --[[
-
-      _________                                 .____    ._____.    
-     /   _____/ ____  __ _________   ____  ____ |    |   |__\_ |__  
-     \_____  \ /  _ \|  |  \_  __ \_/ ___\/ __ \|    |   |  || __ \ 
-     /        (  <_> )  |  /|  | \/\  \__\  ___/|    |___|  || \_\ \
-    /_______  /\____/|____/ |__|    \___  >___  >_______ \__||___  /
-            \/                          \/    \/        \/       \/ 
-
-    SourceLib - a common library by Team TheSource
-    Copyright (C) 2014  Team TheSource
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see http://www.gnu.org/licenses/.
-
-
     Introduction:
         We were tired of updating every single script we developed so far so we decided to have it a little bit
         more dynamic with a custom library which we can update instead and every script using it will automatically
@@ -844,9 +819,11 @@ function Spell:Cast(param1, param2)
 
     -- Cast charged spell
     if param1 ~= nil and param2 ~= nil and self.__charged and self:IsCharging() then
-        local p = CLoLPacket(230)
+        --print("Sending xerath Q")
+        local p = CLoLPacket(0xE6) 
         p:EncodeF(player.networkID)
-        p:Encode1(0x80)
+        p:Encode1(0xE2)
+        p:Encode1(0)
         p:EncodeF(param1)
         p:EncodeF(0)
         p:EncodeF(param2)
@@ -1123,7 +1100,7 @@ function Spell:OnSendPacket(p)
 
     -- Charged spells
     if self.__charged then
-        if p.header == 230 then
+        if p.header == 0xE6 then
             if os.clock() - self.__charged_castTime <= 0.1 then
                 p:Block()
             end
@@ -1132,9 +1109,10 @@ function Spell:OnSendPacket(p)
             if packet:get("spellId") == self.spellId then
                 if os.clock() - self.__charged_castTime <= self.__charged_duration then
                     self:_AbortCharge()
-                    local newPacket = CLoLPacket(230)
+                    local newPacket = CLoLPacket(0xE6)
                     newPacket:EncodeF(player.networkID)
-                    newPacket:Encode1(0x80)
+                    newPacket:Encode1(0xE2)
+                    newPacket:Encode1(0)
                     newPacket:EncodeF(mousePos.x)
                     newPacket:EncodeF(mousePos.y)
                     newPacket:EncodeF(mousePos.z)
@@ -3057,7 +3035,7 @@ end
 
 -- Update script
 if autoUpdate then
-    SourceUpdater("SourceLib", version, "raw.github.com", "/TheRealSource/public/master/common/SourceLib.lua", LIB_PATH .. "SourceLib.lua", "/TheRealSource/public/master/common/SourceLib.version"):SetSilent(silentUpdate):CheckUpdate()
+    SourceUpdater("SourceLib", version, "raw.github.com", "/gbilbao/Bilbao/master/BoL1/Common/SourceLib.lua", LIB_PATH .. "SourceLib.lua", "/gbilbao/Bilbao/master/BoL1/Common/SourceLib.version"):SetSilent(silentUpdate):CheckUpdate()
 end
 
 -- Set enemy bar data

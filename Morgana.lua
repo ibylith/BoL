@@ -1,5 +1,5 @@
 if myHero.charName ~= "Morgana"  or not VIP_USER then return end
-local version = 0.2
+local version = 0.3
 local AUTOUPDATE = true
 local SCRIPT_NAME = "SXMorgana"
 require 'VPrediction'
@@ -40,7 +40,7 @@ local target = nil
 
 function CheckUpdate()
         local scriptName = "SXMorgana"
-        local version = 1.2
+        local version = 1.3
         local ToUpdate = {}
         ToUpdate.Version = version
         ToUpdate.Host = "raw.githubusercontent.com"
@@ -338,8 +338,8 @@ function initComponents()
   
  
   Menu.Ads:addSubMenu("VIP", "VIP")
-    Menu.Ads.VIP:addParam("skin", "Use custom skin", SCRIPT_PARAM_ONOFF, false)
-  Menu.Ads.VIP:addParam("skin1", "Skin changer", SCRIPT_PARAM_SLICE, 1, 1, 5)
+ --   Menu.Ads.VIP:addParam("skin", "Use custom skin", SCRIPT_PARAM_ONOFF, false)
+ -- Menu.Ads.VIP:addParam("skin1", "Skin changer", SCRIPT_PARAM_SLICE, 1, 1, 5)
 
   
  Menu:addSubMenu("["..myHero.charName.." - Drawings]", "drawings")

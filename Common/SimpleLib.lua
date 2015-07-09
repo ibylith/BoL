@@ -1,6 +1,6 @@
 local AUTOUPDATES = true
 local ScriptName = "SimpleLib"
-_G.SimpleLibVersion = 0.51
+_G.SimpleLibVersion = 0.60
 
 SPELL_TYPE = {LINEAR = 1, CIRCULAR = 2, CONE = 3, TARGETTED = 4, SELF = 5}
 
@@ -24,6 +24,7 @@ class "_ScriptUpdate"
 class "_Interrupter"
 class "_Initiator"
 class "_Evader"
+class "_AutoSmite"
 
 local CHANELLING_SPELLS = {
     ["Katarina"]                    = "R",
@@ -196,6 +197,10 @@ function IsCC(enemy, spelltype)
     return false
 end
 
+function ExtraTime()
+    return -0.07--GetLatency()/2000 - 0.1
+end
+
 function CheckUpdate()
     if AUTOUPDATES then
         local ToUpdate = {}
@@ -212,12 +217,11 @@ function CheckUpdate()
 end
 
 function Immune(target)
-    --[[
     if TargetHaveBuff("JudicatorIntervention", target) then return true
     elseif TargetHaveBuff("UndyingRage", target) then return true
     elseif TargetHaveBuff("FerociousHowl", target) then return true
     elseif TargetHaveBuff("chronorevive", target) then return true
-    elseif TargetHaveBuff("chronoshift", target) then return true end]]
+    elseif TargetHaveBuff("chronoshift", target) then return true end
     return false
 end
 
@@ -444,6 +448,41 @@ function _arrangePriorities()
     end
 end
 
+--CLASS: _AutoSmite
+function _AutoSmite:__init()
+    self.Spell = _Spell({Slot = FindSummonerSlot("smite"), DamageName = "SMITE", Range = 780, Type = SPELL_TYPE.TARGETTED})
+    if self.Spell.Slot ~= nil then
+        if _G.SimpleAutoSmite == nil then
+            self.JungleMinions = minionManager(MINION_JUNGLE, self.Spell.Range + 100, myHero, MINION_SORT_MAXHEALTH_DEC)
+            _G.SimpleAutoSmite = scriptConfig("SimpleLib - Auto Smite", "SimpleAutoSmite".."07072015"..myHero.charName)
+            _G.SimpleAutoSmite:addParam("Baron", "Use Smite on Dragon/Baron", SCRIPT_PARAM_ONOFF, true)
+            _G.SimpleAutoSmite:addParam("Killsteal", "Use Smite to Killsteal", SCRIPT_PARAM_ONOFF, true)
+            AddTickCallback(
+                function()
+                    if self.Spell:IsReady() then
+                        if _G.SimpleAutoSmite.Baron then
+                            self.JungleMinions:update()
+                            for i, minion in pairs(self.JungleMinions.objects) do
+                                if self.Spell:ValidTarget(minion) and minion.health > 0 and (minion.charName:lower():find("dragon") or minion.charName:lower():find("baron")) then
+                                    if self.Spell:Damage(minion) > minion.health then
+                                        self.Spell:Cast(minion)
+                                    end
+                                end
+                            end
+                        end
+                        if _G.SimpleAutoSmite.Killsteal then
+                            for i, enemy in ipairs(GetEnemyHeroes()) do
+                                if self.Spell:ValidTarget(enemy) and self.Spell:Damage(enemy) > enemy.health then
+                                    self.Spell:Cast(enemy)
+                                end
+                            end
+                        end
+                    end
+                end
+            )
+        end
+    end
+end
 
 --CLASS: _CircleManager
 function _CircleManager:__init()
@@ -617,13 +656,10 @@ end
 --CLASS: _Spell
 function _Spell:__init(tab)
     assert(tab and type(tab) == "table", "_Spell: Table is invalid!")
-    self.SourceFunction = nil
-    self.RangeFunction = nil
-    self.TypeFunction = nil
-    self.TickCallback = false
-    self.ProcessCallback = false
     self.LastCastTime = 0
+    self.Object = nil
     self.Source = myHero
+    self.DrawSource = myHero
     self.TS = nil
     self.Menu = nil
     --self.LastHitMode = LASTHIT_MODE.NEVER
@@ -632,7 +668,13 @@ function _Spell:__init(tab)
         self.Slot = tab.Slot
         self.IsForEnemies = true
         if tab.IsForEnemies ~= nil and type(tab.IsForEnemies) == "boolean" then self.IsForEnemies = tab.IsForEnemies end
-        self.Name = tab.DamageName ~= nil and tab.DamageName or "Spell"..tostring(#SpellManager.spells + 1)
+        if tab.DamageName ~= nil then
+            self.Name = tab.DamageName
+        elseif self.Slot ~= nil then
+            self.Name = SlotToString(self.Slot)
+        else
+            self.Name = "Spell"..tostring(#SpellManager.spells + 1)
+        end
         self.DamageName = tab.DamageName ~= nil and tab.DamageName or SlotToString(self.Slot)
         assert(tab.Range and type(tab.Range) == "number", "_Spell: Range is invalid!")
         self.Range = tab.Range
@@ -640,11 +682,11 @@ function _Spell:__init(tab)
         self.JungleMinions = minionManager(MINION_JUNGLE, self.Range + 50, self.Source, MINION_SORT_MAXHEALTH_DEC)
         self.Delay = tab.Delay ~= nil and tab.Delay or 0
         self.Speed = tab.Speed ~= nil and tab.Speed or math.huge
+        self.Width = tab.Width ~= nil and tab.Width or 1
+        self.Collision = tab.Collision ~= nil and tab.Collision or false
+        self.Aoe = tab.Aoe ~= nil and tab.Aoe or false
         if self:IsSkillShot() then
             Prediction:LoadPredictions()
-            self.Width = tab.Width ~= nil and tab.Width or 1
-            self.Collision = tab.Collision ~= nil and tab.Collision or false
-            self.Aoe = tab.Aoe ~= nil and tab.Aoe or false
             self:AddToMenu()
             SpellManager:AddPrediction()
             if self.Menu ~= nil then
@@ -667,7 +709,7 @@ end
 function _Spell:AddDraw(t)
     self:AddToMenu()
     if self.Menu~=nil then
-        local table = {Menu = self.Menu, Name = self.Name.."Drawing", Text = "Drawing Settings", Source = function() return self.Source end, Range = function() return self.Range end, Condition = function() return self:IsReady() end}
+        local table = {Menu = self.Menu, Name = self.Name.."Drawing", Text = "Drawing Settings", Source = function() if self.DrawSourceFunction ~= nil then return self.DrawSource end return self.Source end, Range = function() return self.Range end, Condition = function() return self:IsReady() end}
         local enable = true
         if t ~= nil and t.Enable ~= nil and type(t.Enable) == "boolean" then enable = t.Enable end
         local color = t ~= nil and t.Color ~= nil and t.Color or { 255, 255, 255, 255 }
@@ -700,6 +742,12 @@ function _Spell:AddRangeFunction(rngFunc)
     self:LoadTickCallback()
     return self
 end
+function _Spell:AddWidthFunction(func)
+    assert(func and type(func) == "function", "_Spell: WidthFunction is invalid!")
+    self.WidthFunction = func
+    self:LoadTickCallback()
+    return self
+end
 
 function _Spell:AddTypeFunction(f)
     assert(f and type(f) == "function", "_Spell: TypeFunction is invalid!")
@@ -708,10 +756,30 @@ function _Spell:AddTypeFunction(f)
     return self
 end
 
+function _Spell:AddDamageFunction(f)
+    assert(f and type(f) == "function", "_Spell: DamageFunction is invalid!")
+    self.DamageFunction = f
+    return self
+end
+
 function _Spell:AddSourceFunction(srcFunc)
     assert(srcFunc and type(srcFunc) == "function", "_Spell: SourceFunction is invalid!")
     self.SourceFunction = srcFunc
     self:LoadTickCallback()
+    return self
+end
+
+function _Spell:AddDrawSourceFunction(drawSrcFunc)
+    assert(drawSrcFunc and type(drawSrcFunc) == "function", "_Spell: DrawSourceFunction is invalid!")
+    self.DrawSourceFunction = drawSrcFunc
+    self:LoadTickCallback()
+    return self
+end
+
+function _Spell:AddTrackObject(t)
+    assert(t and (type(t) == "string" or type(t) == "table"), "_Spell: AddTrackObject is invalid!")
+    self.TrackObject = type(t) == "table" and t or { t }
+    self:LoadCreateAndDeleteCallback()
     return self
 end
 
@@ -725,18 +793,18 @@ function _Spell:SetAccuracy(int)
 end
 
 function _Spell:YasuoWall(vector)
-    if self:IsReady() and vector ~= nil and YasuoWall ~= nil then
+    if YasuoWall ~= nil and self:IsReady() and self.Speed ~= math.huge and vector ~= nil then
         for i, enemy in ipairs(GetEnemyHeroes()) do
             if enemy.charName == "Yasuo" then
                 local level = enemy:GetSpellData(_W).level
-                local width = 300 + level * 50
+                local width = 250 + level * 50
                 local pos1 = Vector(YasuoWall.Object) + Vector(Vector(YasuoWall.Object) - Vector(YasuoWall.StartVector)):normalized():perpendicular() * width/2
                 local pos2 = Vector(YasuoWall.Object) + Vector(Vector(YasuoWall.Object) - Vector(YasuoWall.StartVector)):normalized():perpendicular2() * width/2
-                local intersection = VectorIntersection(pos1, pos2, self.Source, vector)
-                if intersection ~= nil and GetDistanceSqr(pos1, intersection) < math.pow(width, 2) and GetDistanceSqr(pos2, intersection) < math.pow(width, 2) then
-                    return true
-                end
-                break
+                local p1 = WorldToScreen(D3DXVECTOR3(pos1.x, pos1.y, pos1.z))
+                local p2 = WorldToScreen(D3DXVECTOR3(pos2.x, pos2.y, pos2.z))
+                local p3 = WorldToScreen(D3DXVECTOR3(self.Source.x, self.Source.y, self.Source.z))
+                local p4 = WorldToScreen(D3DXVECTOR3(vector.x, vector.y, vector.z))
+                return IsLineSegmentIntersection(p1, p2, p3, p4)
             end
         end
     end
@@ -744,7 +812,7 @@ function _Spell:YasuoWall(vector)
 end
 
 function _Spell:CastToVector(vector)
-    if self:IsReady() and vector ~= nil then
+    if self:IsReady() and vector ~= nil and not OrbwalkManager:Evade()  then
         CastSpell(self.Slot, vector.x, vector.z)
     end
 end
@@ -758,10 +826,12 @@ function _Spell:Cast(target, t)
             end
             if self:IsSkillShot() then
                 local CastPosition, WillHit = self:GetPrediction(target, t)
+                if self:YasuoWall(CastPosition) then return end
                 if CastPosition ~= nil and WillHit then
                     self:CastToVector(CastPosition)
                 end
             elseif self:IsTargetted() then
+                if self:YasuoWall(target) then return end
                 CastSpell(self.Slot, target)
             elseif self:IsSelf() then
                 local CastPosition,  WillHit = self:GetPrediction(target, t)
@@ -815,8 +885,43 @@ function _Spell:LoadTickCallback()
                 if self.TypeFunction ~= nil then
                     self.Type = self.TypeFunction()
                 end
+
+                if self.DrawSourceFunction ~= nil then
+                    self.DrawSource = self.DrawSourceFunction()
+                end
+                if self.WidthFunction ~= nil then
+                    self.Width = self.WidthFunction()
+                end
             end
         )
+    end
+end
+
+function _Spell:LoadCreateAndDeleteCallback()
+    if not self.ObjectCallback then
+        AddCreateObjCallback(
+            function(obj)
+                if obj and obj.name and self.Object == nil and os.clock() - self.LastCastTime > self.Delay * 0.8 and os.clock() - self.LastCastTime < self.Delay * 1.2 and ( (obj.spellOwner and obj.spellOwner.isMe) or GetDistanceSqr(self.Source, obj) < 10 * 10) then
+                    for _, s in ipairs(self.TrackObject) do
+                        if obj.name:lower():find(s:lower()) then
+                            self.Object = obj
+                        end
+                    end
+                end
+            end
+        )
+        AddDeleteObjCallback(
+            function(obj)
+                if obj and obj.name and self.Object ~= nil and GetDistanceSqr(obj, self.Object) < math.pow(10, 2) then
+                    for _, s in ipairs(self.TrackObject) do
+                        if obj.name:lower():find(s:lower()) then
+                            self.Object = nil
+                        end
+                    end
+                end
+            end
+        )
+        self.ObjectCallback = true
     end
 end
 
@@ -872,7 +977,8 @@ function _Spell:PredictionSelected()
 end
 
 function _Spell:ValidTarget(target)
-    return IsValidTarget(target, math.huge, self.IsForEnemies) and GetDistanceSqr(self.Source, target) <= self.Range * self.Range
+    local source = self.DrawSourceFunction ~= nil and self.DrawSource or self.Source
+    return IsValidTarget(target, math.huge, self.IsForEnemies) and GetDistanceSqr(source, target) <= self.Range * self.Range
 end
 
 function _Spell:ObjectsInArea(objects)
@@ -926,9 +1032,26 @@ function _Spell:GetSpellData()
 end
 
 function _Spell:Damage(target, stage)
-    if self.DamageName ~= nil then
+    if self.DamageName ~= nil and self.Slot ~= nil then
         if myHero.charName == "Irelia" and self.Slot ~= nil and self.Slot == _Q then
             return getDmg(self.DamageName, target, myHero, stage) + getDmg("AD", target, myHero, stage)
+        end
+        if self.DamageFunction ~= nil then
+            return self.DamageFunction(self.DamageName, target, myHero, stage)
+        end
+        if self.DamageName == "SMITE" then
+            if IsValidTarget(target) then
+                if target.type == myHero.type then
+                    if self:GetSpellData().name:lower():find("smiteduel") then
+                        return getDmg("SMITESS", target, myHero, stage)
+                    elseif self:GetSpellData().name:lower():find("smiteplayerganker") then
+                        return getDmg("SMITESB", target, myHero, stage)
+                    end
+                else
+                    return math.max(20 * myHero.level + 370, 30 * myHero.level + 330, 40 * myHero.level + 240, 50 * myHero.level + 100)
+                end
+            end
+            return 0
         end
         return getDmg(self.DamageName, target, myHero, stage)
     end
@@ -1110,7 +1233,7 @@ function _Spell:LastHit(tab)
                                 CanCalculate = true
                             else
                                 local ProjectileSpeed = myHero.range > 300 and Prediction.VP:GetProjectileSpeed(myHero) or math.huge
-                                local time = OrbwalkManager:WindUpTime() + GetDistance(myHero, object) / ProjectileSpeed + OrbwalkManager:Latency() - 100/1000
+                                local time = OrbwalkManager:WindUpTime() + GetDistance(myHero, object) / ProjectileSpeed + ExtraTime()
                                 local predHealth = Prediction.VP:GetPredictedHealth(object, time, delay)
                                 if predHealth <= 0 then
                                     CanCalculate = true
@@ -1124,14 +1247,14 @@ function _Spell:LastHit(tab)
                         local dmg = self:Damage(object)
                         local time = 0
                         if self:IsSkillShot() then
-                            time = self.Delay + GetDistance(object, self.Position) / self.Speed + GetLatency()/2000 - 0.1
+                            time = self.Delay + GetDistance(object, self.Source) / self.Speed + ExtraTime()
                         elseif self:IsTargetted() then
-                            time = self.Delay + GetDistance(object, self.Position) / self.Speed + GetLatency()/2000 - 0.1
+                            time = self.Delay + GetDistance(object, self.Source) / self.Speed + ExtraTime()
                         elseif self:IsSelf() then
-                            time = self.Delay + GetDistance(object, self.Position) / self.Speed + GetLatency()/2000 - 0.1
+                            time = self.Delay + GetDistance(object, self.Source) / self.Speed + ExtraTime()
                         end
                         local predHealth = Prediction.VP:GetPredictedHealth(object, time, delay)
-                        if predHealth == object.health and self.Delay + GetDistance(object, self.Position) / self.Speed > 0 and mode == LASTHIT_MODE.SMART then return end 
+                        if predHealth == object.health and self.Delay + GetDistance(object, self.Source) / self.Speed > 0 and mode == LASTHIT_MODE.SMART then return end 
                         if dmg > predHealth and predHealth > -1 then
                             if UseCast then
                                self:Cast(object)
@@ -1171,7 +1294,7 @@ function _Prediction:__init()
         require "DivinePred"
         table.insert(self.PredictionList, "DivinePred") 
     end
-    if FileExist(LIB_PATH.."SPrediction.lua") then
+    if FileExist(LIB_PATH.."SPrediction.lua") and not myHero.charName == "Diana" then
         require "SPrediction"
         table.insert(self.PredictionList, "SPrediction") 
     end
@@ -1193,7 +1316,7 @@ function _Prediction:LoadPredictions()
             end
             end, 5)
     end
-    if FileExist(LIB_PATH.."SPrediction.lua") then 
+    if FileExist(LIB_PATH.."SPrediction.lua") and not myHero.charName == "Diana" then 
         DelayAction(function() 
             if self.SP == nil then
                 self.SP = SPrediction()
@@ -1398,7 +1521,16 @@ function _Prediction:GetPrediction(target, sp)
         elseif TypeOfPrediction == "HPrediction" then
             local tipo = "PromptCircle"
             local tab = {}
-            if skillshotType == SPELL_TYPE.LINEAR or skillshotType == SPELL_TYPE.CONE then
+            range = GetDistance(source, myHero) + range
+            local time = delay + range/speed
+            if time > 0.8 and width <= 100 then
+                tab.IsVeryLowAccuracy = true
+            elseif time > 0.6 and width <= 60 then
+                tab.IsVeryLowAccuracy = true
+            elseif width <= 40 then
+                tab.IsVeryLowAccuracy = true
+            end
+            if skillshotType == SPELL_TYPE.LINEAR then
                 width = 2 * width
                 if speed ~= math.huge then 
                     tipo = "DelayLine"
@@ -1410,11 +1542,7 @@ function _Prediction:GetPrediction(target, sp)
                     tab.collisionM = collision
                     tab.collisionH = collision
                 end
-                if skillshotType == SPELL_TYPE.CONE then
-                    width = width * math.min(GetDistance(target, source) / range, 1)
-                end
                 tab.width = width
-                if width <= 120 then tab.IsVeryLowAccuracy = true end
             elseif skillshotType == SPELL_TYPE.CIRCULAR then
                 tab.radius = width
                 if speed ~= math.huge then 
@@ -1423,9 +1551,12 @@ function _Prediction:GetPrediction(target, sp)
                 else
                     tipo = "PromptCircle"
                 end
-                if width <= 90 then tab.IsVeryLowAccuracy = true end
+            elseif skillshotType == SPELL_TYPE.CONE then
+                tab.angle = width
+                tipo = "CircularArc"
+                tab.speed = speed
+                aoe = false
             end
-            range = GetDistance(source, myHero) + range
             tab.range = range
             tab.delay = delay
             tab.type = tipo
@@ -1475,7 +1606,7 @@ function _Prediction:GetPredictedPos(target, tab)
     local accuracy = tab.Accuracy ~= nil and tab.Accuracy or 60
     local CastPosition, HitChance, Position = self.VP:GetPredictedPos(target, delay, speed, from, collision)
     local WillHit = false
-    if HitChance > 0 then
+    if HitChance >= 0 then
         WillHit = true
     else
         WillHit = false
@@ -1732,7 +1863,7 @@ function _OrbwalkManager:ShouldWait()
                 if self:InRange(minion) and not minion.dead then
                     local delay = _G.SpellManagerMenu ~= nil and _G.SpellManagerMenu.FarmDelay ~= nil and _G.SpellManagerMenu.FarmDelay or 0
                     local ProjectileSpeed = myHero.range > 300 and Prediction.VP:GetProjectileSpeed(myHero) or math.huge
-                    local time = self:WindUpTime() + GetDistance(myHero.pos, minion.pos) / ProjectileSpeed + self:Latency() - 100/1000
+                    local time = self:WindUpTime() + GetDistance(myHero.pos, minion.pos) / ProjectileSpeed + ExtraTime()
                     local predHealth = Prediction.VP:GetPredictedHealth(minion, time, delay)
                     local damage = Prediction.VP:CalcDamageOfAttack(myHero, minion, {name = "Basic"}, 0)
                     if predHealth > 0 then
@@ -1740,7 +1871,7 @@ function _OrbwalkManager:ShouldWait()
                             return true
                         else
                             --[[
-                            time = self:AnimationTime() + GetDistance(myHero.pos, minion.pos) / ProjectileSpeed + self:Latency() - 100/1000
+                            time = self:AnimationTime() + GetDistance(myHero.pos, minion.pos) / ProjectileSpeed + ExtraTime()
                             time = time * 2
                             predHealth = Prediction.VP:GetPredictedHealth2(minion, time)
                             if damage > predHealth and predHealth < minion.health then
@@ -1863,7 +1994,7 @@ function _OrbwalkManager:OrbLoad()
             require 'SOW'
             self.OrbLoaded = self:GetOrbwalkSelected()
             --_G.OrbwalkManagerMenu:addSubMenu("Orbwalker Settings", "Orbwalker")
-            SOWi = SOW(VP)
+            SOWi = SOW(Prediction.VP)
             SOWi:LoadToMenu()
             self:EnableMovement()
             self:EnableAttacks()
@@ -2101,8 +2232,12 @@ function _Evader:__init(menu)
                         local spelltype, casttype = getSpellType(unit, spell.name)
                         if spelltype == "Q" or spelltype == "W" or spelltype == "E" or spelltype == "R" then
                             if self.Menu[unit.charName..spelltype] then
-                                table.insert(self.ActiveSpells, {Time = os.clock() - GetLatency() / 2000, Unit = unit, Spell = spell, SpellType = spelltype})
-                                self:CheckHitChampion(unit, spell, spelltype)
+                                DelayAction(
+                                    function() 
+                                        table.insert(self.ActiveSpells, {Time = os.clock() - GetLatency() / 2000, Unit = unit, Spell = spell, SpellType = spelltype})
+                                        self:CheckHitChampion(unit, spell, spelltype)
+                                    end, 
+                                spell.windUpTime /2)
                             end
                         end
                     end
@@ -2378,17 +2513,19 @@ function _ScriptUpdate:GetOnlineVersion()
             end
         else
             self.OnlineVersion = (Base64Decode(self.File:sub(ContentStart + 1,ContentEnd-1)))
-            self.OnlineVersion = tonumber(self.OnlineVersion)
-            if self.OnlineVersion and self.OnlineVersion > self.LocalVersion then
-                if self.CallbackNewVersion and type(self.CallbackNewVersion) == 'function' then
-                    self.CallbackNewVersion(self.OnlineVersion,self.LocalVersion)
-                end
-                self:CreateSocket(self.ScriptPath)
-                self.DownloadStatus = 'Connect to Server for ScriptDownload'
-                AddTickCallback(function() self:DownloadUpdate() end)
-            else
-                if self.CallbackNoUpdate and type(self.CallbackNoUpdate) == 'function' then
-                    self.CallbackNoUpdate(self.LocalVersion)
+            if self.OnlineVersion ~= nil then
+                self.OnlineVersion = tonumber(self.OnlineVersion)
+                if self.OnlineVersion ~= nil and self.LocalVersion ~= nil and type(self.OnlineVersion) == "number" and type(self.LocalVersion) == "number" and self.OnlineVersion > self.LocalVersion then
+                    if self.CallbackNewVersion and type(self.CallbackNewVersion) == 'function' then
+                        self.CallbackNewVersion(self.OnlineVersion,self.LocalVersion)
+                    end
+                    self:CreateSocket(self.ScriptPath)
+                    self.DownloadStatus = 'Connect to Server for ScriptDownload'
+                    AddTickCallback(function() self:DownloadUpdate() end)
+                else
+                    if self.CallbackNoUpdate and type(self.CallbackNoUpdate) == 'function' then
+                        self.CallbackNoUpdate(self.LocalVersion)
+                    end
                 end
             end
         end
@@ -2943,8 +3080,8 @@ if _G.SimpleLibLoaded == nil then
     Prediction = _Prediction()
     CircleManager = _CircleManager()
     SpellManager = _SpellManager()
+    AutoSmite = _AutoSmite()
     YasuoWall = nil
-    local Yasuo = nil
     for i, enemy in ipairs(GetEnemyHeroes()) do
         if enemy.charName == "Yasuo" then 
                 AddProcessSpellCallback(
@@ -2961,7 +3098,7 @@ if _G.SimpleLibLoaded == nil then
                 AddCreateObjCallback(
                     function(obj)
                         if obj and obj.name then
-                            if obj.name:lower() == "yasuo_base_w_windwall_activate.troy" then
+                            if obj.name:lower():find("yasuo_base_w_windwall") and not obj.name:lower():find("activate") then
                                 if YasuoWall ~= nil then
                                     YasuoWall.Object = obj
                                 end
@@ -2972,7 +3109,7 @@ if _G.SimpleLibLoaded == nil then
                 AddDeleteObjCallback(
                     function(obj)
                         if obj and obj.name then
-                            if obj.name:lower() == "yasuo_base_w_windwall_activate.troy" then
+                            if obj.name:lower():find("yasuo_base_w_windwall") and not obj.name:lower():find("activate") then
                                 if YasuoWall ~= nil then
                                     YasuoWall = nil
                                 end
