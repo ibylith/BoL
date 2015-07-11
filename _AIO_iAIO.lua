@@ -1,7 +1,7 @@
 local AUTOUPDATES = true
 local SCRIPTSTATUS = true
 local ScriptName = "iCreative's AIO"
-local version = 1.086
+local version = 1.087
 local champions = {
     ["Riven"]           = true,
     ["Xerath"]          = true,
@@ -1060,7 +1060,6 @@ function _Kennen:LoadMenu()
             if self.Menu.Keys.HarassToggle then self:Harass() end
         end
     )
-    --[[
     AddProcessSpellCallback(
         function(unit, spell) 
             if myHero.dead or not self.MenuLoaded then return end
@@ -1070,7 +1069,8 @@ function _Kennen:LoadMenu()
                 end
             end
         end
-    )]]
+    )
+    --[[
     AddCastSpellCallback(
         function(iSpell, startPos, endPos, targetUnit)
             if myHero.dead or not self.MenuLoaded then return end
@@ -1078,7 +1078,7 @@ function _Kennen:LoadMenu()
                 if self.Menu.Auto.Zhonyas and DefensiveItems.Zhonyas.IsReady() then DelayAction(function() CastSpell(DefensiveItems.Zhonyas.Slot()) end, 0.3) end
             end
         end
-    )
+    )]]
 
     AddDrawCallback(
         function()
@@ -1509,7 +1509,7 @@ function _Heimerdinger:LoadMenu()
             if self.Menu.Keys.HarassToggle then self:Harass() end
         end
     )
-    --[[
+    
     AddProcessSpellCallback(
         function(unit, spell) 
             if myHero.dead or not self.MenuLoaded then return end
@@ -1534,7 +1534,8 @@ function _Heimerdinger:LoadMenu()
                 end
             end
         end
-    )]]
+    )
+    --[[
     AddCastSpellCallback(
         function(iSpell, startPos, endPos, targetUnit)
             if iSpell == self.QSpell.Slot then
@@ -1554,7 +1555,7 @@ function _Heimerdinger:LoadMenu()
                 self.R.LastCastTime = os.clock()
             end
         end
-    )
+    )]]
     
 
     AddDrawCallback(
@@ -1873,7 +1874,7 @@ function _Irelia:LoadMenu()
             if self.Menu.Keys.Run then self:Run() end
         end
     )
-    --[[
+    
     AddProcessSpellCallback(
         function(unit, spell) 
             if myHero.dead or not self.MenuLoaded then return end
@@ -1885,7 +1886,8 @@ function _Irelia:LoadMenu()
                 end
             end
         end
-    )]]
+    )
+    --[[
     AddCastSpellCallback(
         function(iSpell, startPos, endPos, targetUnit)
             if myHero.dead or not self.MenuLoaded then return end
@@ -1899,7 +1901,7 @@ function _Irelia:LoadMenu()
                 self.R.LastCastTime = os.clock()
             end
         end
-    )
+    )]]
 
     AddDrawCallback(
         function()
@@ -2275,7 +2277,6 @@ function _Lissandra:LoadMenu()
         end
     )
 
-    --[[
     AddProcessSpellCallback(
         function(unit, spell) 
             if myHero.dead or not self.MenuLoaded then return end
@@ -2286,7 +2287,8 @@ function _Lissandra:LoadMenu()
                 elseif spell.name:lower():find("lissandrar") then self.R.LastCastTime = os.clock() end
             end
         end
-    )]]
+    )
+    --[[
     AddCastSpellCallback(
         function(iSpell, startPos, endPos, targetUnit)
             if myHero.dead or not self.MenuLoaded then return end
@@ -2301,7 +2303,7 @@ function _Lissandra:LoadMenu()
                 self.R.LastCastTime = os.clock()
             end
         end
-    )
+    )]]
 
     AddCreateObjCallback(
         function(obj)
@@ -2310,9 +2312,9 @@ function _Lissandra:LoadMenu()
                 self.Passive.IsReady = true
             elseif obj.name:lower():find("missile") and self.E.MissileObj == nil and (obj.spellOwner and obj.spellOwner.isMe or GetDistanceSqr(myHero, obj) < 50 * 50) and os.clock() - self.E.LastCastTime < 0.35 then
                 self.E.MissileObj = obj
-            elseif obj.name:lower():find("lissandra") and obj.name:lower():find("e_cast.troy") and os.clock() - self.E.LastCastTime < 0.5 then
+            elseif obj.name:lower():find("lissandra") and obj.name:lower():find("e_cast.troy") and os.clock() - self.E.LastCastTime < 0.35 then
                 self.E.CastObj = obj
-            elseif obj.name:lower():find("lissandra") and obj.name:lower():find("e_end.troy") and os.clock() - self.E.LastCastTime < 0.5 then
+            elseif obj.name:lower():find("lissandra") and obj.name:lower():find("e_end.troy") and os.clock() - self.E.LastCastTime < 0.35 then
                 self.E.EndObj = obj
             end
         end
@@ -2768,21 +2770,20 @@ function _Orianna:LoadMenu()
             if self.Menu.Keys.Run then self:Run() end
         end
     )
-    --[[
+    
     AddProcessSpellCallback(
         function(unit, spell)
             if myHero.dead or unit == nil or not self.MenuLoaded then return end
             if not unit.isMe then return end
             if spell.name:lower():find("oriana") and spell.name:lower():find("izuna") and spell.name:lower():find("command") then self.Q.LastCastTime = os.clock()
             elseif spell.name:lower():find("oriana") and spell.name:lower():find("dissonance") and spell.name:lower():find("command") then self.W.LastCastTime = os.clock()
-            elseif spell.name:lower():find("oriana") and spell.name:lower():find("redact") and spell.name:lower():find("command") then self.E.LastCastTime = os.clock()
+            elseif spell.name:lower():find("oriana") and spell.name:lower():find("redact") and spell.name:lower():find("command") then 
+                self.E.LastCastTime = os.clock()
+                DelayAction(function(pos) self.Position = pos end, self.E.Delay + GetDistance(spell.endPos, self.Position) / self.E.Speed, {spell.target})
             elseif spell.name:lower():find("oriana") and spell.name:lower():find("detonate") and spell.name:lower():find("command") then self.R.LastCastTime = os.clock()
             end
-            if unit and spell and unit.isMe and spell.name:lower():find("oriana") and spell.name:lower():find("redact") and spell.name:lower():find("command") then
-                DelayAction(function(pos) self.Position = pos end, self.E.Delay + GetDistance(spell.endPos, self.Position) / self.E.Speed, {spell.target})
-            end
         end
-    )]]
+    )
     --BALL MANAGER
 
     AddAnimationCallback(
@@ -2829,6 +2830,7 @@ function _Orianna:LoadMenu()
     if VIP_USER then
         HookPackets() 
     end
+    --[[
     AddCastSpellCallback(
         function(iSpell, startPos, endPos, targetUnit) 
             if iSpell == self.R.Slot and #self.RSpell:ObjectsInArea(GetEnemyHeroes()) == 0  then
@@ -2847,7 +2849,7 @@ function _Orianna:LoadMenu()
                 self.R.LastCastTime = os.clock()
             end
         end
-    )
+    )]]
     if VIP_USER then 
         AddSendPacketCallback(
             function(p)
@@ -4844,7 +4846,7 @@ function _Draven:LoadMenu()
         end
     )
 
-
+    --[[
     AddCastSpellCallback(
         function(iSpell, startPos, endPos, targetUnit)
             if myHero.dead or not self.MenuLoaded then return end
@@ -4860,8 +4862,8 @@ function _Draven:LoadMenu()
                 self.R.LastCastTime = os.clock()
             end
         end
-    )
-    --[[
+    )]]
+    
     AddProcessSpellCallback(
         function(unit, spell) 
             if myHero.dead or not self.MenuLoaded then return end
@@ -4876,7 +4878,7 @@ function _Draven:LoadMenu()
                 end
             end
         end
-    )]]
+    )
 
 
     AddDrawCallback(

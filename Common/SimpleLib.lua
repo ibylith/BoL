@@ -1,6 +1,6 @@
 local AUTOUPDATES = true
 local ScriptName = "SimpleLib"
-_G.SimpleLibVersion = 0.60
+_G.SimpleLibVersion = 0.62
 
 SPELL_TYPE = {LINEAR = 1, CIRCULAR = 2, CONE = 3, TARGETTED = 4, SELF = 5}
 
@@ -9,7 +9,6 @@ ORBWALK_MODE = {COMBO = 1, HARASS = 2, CLEAR = 3, LASTHIT = 4, NONE = -1}
 CIRCLE_MANAGER = {CIRCLE_2D = 1, CIRCLE_3D = 2, CIRCLE_MINIMAP = 3}
 
 LASTHIT_MODE = { NEVER = 1, SMART = 2, ALWAYS = 3}
-
 
 class "_CircleManager"
 class "_SpellManager"
@@ -164,6 +163,8 @@ local CC_SPELLS = {
     ["Zed"]                         = "R",
 }
 
+local EnemiesInGame = {}
+
 function IsGapclose(enemy, spelltype)
     if IsValidTarget(enemy) and GAPCLOSER_SPELLS[enemy.charName] ~= nil then
         for champ, spell in pairs(GAPCLOSER_SPELLS) do
@@ -217,11 +218,11 @@ function CheckUpdate()
 end
 
 function Immune(target)
-    if TargetHaveBuff("JudicatorIntervention", target) then return true
-    elseif TargetHaveBuff("UndyingRage", target) then return true
-    elseif TargetHaveBuff("FerociousHowl", target) then return true
-    elseif TargetHaveBuff("chronorevive", target) then return true
-    elseif TargetHaveBuff("chronoshift", target) then return true end
+    if EnemiesInGame["Kayle"] and TargetHaveBuff("judicatorintervention", target) then return true
+    elseif target.charName == "Tryndamere" and TargetHaveBuff("undyingrage", target) then return true
+    elseif target.charName == "Sion" and TargetHaveBuff("sionpassivezombie", target) then return true
+    elseif target.charName == "Aatrox" and TargetHaveBuff("aatroxpassivedeath", target) then return true
+    elseif EnemiesInGame["Zilean"] and TargetHaveBuff("chronoshift", target) then return true end
     return false
 end
 
@@ -1294,7 +1295,7 @@ function _Prediction:__init()
         require "DivinePred"
         table.insert(self.PredictionList, "DivinePred") 
     end
-    if FileExist(LIB_PATH.."SPrediction.lua") and not myHero.charName == "Diana" then
+    if FileExist(LIB_PATH.."SPrediction.lua") then
         require "SPrediction"
         table.insert(self.PredictionList, "SPrediction") 
     end
@@ -1307,21 +1308,21 @@ function _Prediction:LoadPredictions()
             if self.HP == nil then
                 self.HP = HPrediction()
             end
-            end, 5)
+            end, 1)
     end
     if VIP_USER and FileExist(LIB_PATH.."DivinePred.lua") and FileExist(LIB_PATH.."DivinePred.luac") then 
         DelayAction(function() 
             if self.DP == nil then
                 self.DP = DivinePred()
             end
-            end, 5)
+            end, 1)
     end
-    if FileExist(LIB_PATH.."SPrediction.lua") and not myHero.charName == "Diana" then 
+    if FileExist(LIB_PATH.."SPrediction.lua") then 
         DelayAction(function() 
             if self.SP == nil then
                 self.SP = SPrediction()
             end
-            end, 5)
+            end, 1)
     end
 end
 
@@ -1594,24 +1595,26 @@ function _Prediction:GetPrediction(target, sp)
             end
         end
     end
-    return Vector(target), false, Vector(target)
 end
 
 function _Prediction:GetPredictedPos(target, tab)
-    local delay = tab.Delay ~= nil and tab.Delay or 0
-    local speed = tab.Speed or nil
-    local from = tab.Source or nil
-    local collision = tab.Collision or nil
-    local TypeOfPrediction = tab.TypeOfPrediction ~= nil and tab.TypeOfPrediction or "VPrediction"
-    local accuracy = tab.Accuracy ~= nil and tab.Accuracy or 60
-    local CastPosition, HitChance, Position = self.VP:GetPredictedPos(target, delay, speed, from, collision)
-    local WillHit = false
-    if HitChance >= 0 then
-        WillHit = true
-    else
-        WillHit = false
+    if IsValidTarget(target, math.huge, target.team ~= myHero.team) then
+        local delay = tab.Delay ~= nil and tab.Delay or 0
+        local speed = tab.Speed or nil
+        local from = tab.Source or nil
+        local collision = tab.Collision or nil
+        local TypeOfPrediction = tab.TypeOfPrediction ~= nil and tab.TypeOfPrediction or "VPrediction"
+        local accuracy = tab.Accuracy ~= nil and tab.Accuracy or 60
+        local CastPosition, HitChance, Position = self.VP:GetPredictedPos(target, delay, speed, from, collision)
+        local WillHit = false
+        if HitChance >= 0 then
+            WillHit = true
+        else
+            WillHit = false
+        end
+        return CastPosition, WillHit, Position
     end
-    return CastPosition, WillHit, Position
+    return Vector(target), false, Vector(target)
 end
 
 
@@ -2267,20 +2270,30 @@ function _Evader:__init(menu)
 end
 
 function _Evader:CheckHitChampion(unit, spell, spelltype, champion)
-    if skillData[unit.charName]~=nil and skillData[unit.charName][spelltype]~=nil then
-        local shottype  = skillData[unit.charName][spelltype].type
-        local radius    = skillData[unit.charName][spelltype].radius
-        local maxdistance = skillData[unit.charName][spelltype].maxdistance
-        local champion = champion ~= nil and champion or myHero
+    if unit and spell and spelltype and ValidTarget(unit, math.huge, unit.team ~= myHero.team) then
         local hitchampion = false
-        if shottype == 0 then hitchampion = spell.target and spell.target == champion or false
-        elseif shottype == 1 then hitchampion = checkhitlinepass(unit, spell.endPos, radius, maxdistance, champion, champion.boundingRadius)
-        elseif shottype == 2 then hitchampion = checkhitlinepoint(unit, spell.endPos, radius, maxdistance, champion, champion.boundingRadius)
-        elseif shottype == 3 then hitchampion = checkhitaoe(unit, spell.endPos, radius, maxdistance, champion, champion.boundingRadius)
-        elseif shottype == 4 then hitchampion = checkhitcone(unit, spell.endPos, radius, maxdistance, champion, champion.boundingRadius)
-        elseif shottype == 5 then hitchampion = checkhitwall(unit, spell.endPos, radius, maxdistance, champion, champion.boundingRadius)
-        elseif shottype == 6 then hitchampion = checkhitlinepass(unit, spell.endPos, radius, maxdistance, champion, champion.boundingRadius) or checkhitlinepass(unit, Vector(unit)*2-spell.endPos, radius, maxdistance, champion, champion.boundingRadius)
-        elseif shottype == 7 then hitchampion = checkhitcone(spell.endPos, unit, radius, maxdistance, champion, champion.boundingRadius)
+        local champion = champion ~= nil and champion or myHero
+        if skillData[unit.charName] ~= nil and skillData[unit.charName][spelltype] ~= nil then
+            local shottype  = skillData[unit.charName][spelltype].type
+            local radius    = skillData[unit.charName][spelltype].radius
+            local maxdistance = skillData[unit.charName][spelltype].maxdistance
+            if shottype == 0 then hitchampion = spell.target and spell.target.networkID == champion.networkID or false
+            elseif shottype == 1 then hitchampion = checkhitlinepass(unit, spell.endPos, radius, maxdistance, champion, champion.boundingRadius)
+            elseif shottype == 2 then hitchampion = checkhitlinepoint(unit, spell.endPos, radius, maxdistance, champion, champion.boundingRadius)
+            elseif shottype == 3 then hitchampion = checkhitaoe(unit, spell.endPos, radius, maxdistance, champion, champion.boundingRadius)
+            elseif shottype == 4 then hitchampion = checkhitcone(unit, spell.endPos, radius, maxdistance, champion, champion.boundingRadius)
+            elseif shottype == 5 then hitchampion = checkhitwall(unit, spell.endPos, radius, maxdistance, champion, champion.boundingRadius)
+            elseif shottype == 6 then hitchampion = checkhitlinepass(unit, spell.endPos, radius, maxdistance, champion, champion.boundingRadius) or checkhitlinepass(unit, Vector(unit)*2-spell.endPos, radius, maxdistance, champion, champion.boundingRadius)
+            elseif shottype == 7 then hitchampion = checkhitcone(spell.endPos, unit, radius, maxdistance, champion, champion.boundingRadius)
+            end
+        else
+            if spell.target ~= nil and spell.target.networkID == champion.networkID then hitchampion = true end
+            if spell.endPos ~= nil then
+                local pointSegment, pointLine, isOnSegment = VectorPointProjectionOnLineSegment(Vector(unit), Vector(spell.endPos.x, unit.y, spell.endPos.y), champion)
+                if isOnSegment and GetDistanceSqr(pointSegment, champion) < math.pow(300, 2)  then
+                    hitchampion = true
+                end
+            end
         end
         if hitchampion then
             self:TriggerCallbacks(unit, spell)
@@ -2357,8 +2370,6 @@ function _Interrupter:__init(menu)
     end
     return self
 end
-
-
 
 function _Interrupter:CheckChannelingSpells()
     if #GetEnemyHeroes() > 0 then
@@ -3083,42 +3094,42 @@ if _G.SimpleLibLoaded == nil then
     AutoSmite = _AutoSmite()
     YasuoWall = nil
     for i, enemy in ipairs(GetEnemyHeroes()) do
-        if enemy.charName == "Yasuo" then 
-                AddProcessSpellCallback(
-                    function(unit, spell)
-                        if myHero.dead then return end
-                        if unit and spell and unit.charName and spell.name then
-                            if unit.charName == "Yasuo" and spell.name:lower():find("yasuowmovingwall") then
-                                YasuoWall = {StartVector = Vector(unit), EndVector = Vector(spell.endPos.x, unit.y, spell.endPos.z)}
-                                DelayAction(function() YasuoWall = nil end, 4.5)
-                            end
+        EnemiesInGame[enemy.charName] = true
+    end
+    if EnemiesInGame["Yasuo"] then 
+        AddProcessSpellCallback(
+            function(unit, spell)
+                if myHero.dead then return end
+                if unit and spell and unit.charName and spell.name then
+                    if unit.charName == "Yasuo" and spell.name:lower():find("yasuowmovingwall") then
+                        YasuoWall = {StartVector = Vector(unit), EndVector = Vector(spell.endPos.x, unit.y, spell.endPos.z)}
+                        DelayAction(function() YasuoWall = nil end, 4.5)
+                    end
+                end
+            end
+        )
+        AddCreateObjCallback(
+            function(obj)
+                if obj and obj.name then
+                    if obj.name:lower():find("yasuo_base_w_windwall") and not obj.name:lower():find("activate") then
+                        if YasuoWall ~= nil then
+                            YasuoWall.Object = obj
                         end
                     end
-                )
-                AddCreateObjCallback(
-                    function(obj)
-                        if obj and obj.name then
-                            if obj.name:lower():find("yasuo_base_w_windwall") and not obj.name:lower():find("activate") then
-                                if YasuoWall ~= nil then
-                                    YasuoWall.Object = obj
-                                end
-                            end
+                end
+            end
+        )
+        AddDeleteObjCallback(
+            function(obj)
+                if obj and obj.name then
+                    if obj.name:lower():find("yasuo_base_w_windwall") and not obj.name:lower():find("activate") then
+                        if YasuoWall ~= nil then
+                            YasuoWall = nil
                         end
                     end
-                )
-                AddDeleteObjCallback(
-                    function(obj)
-                        if obj and obj.name then
-                            if obj.name:lower():find("yasuo_base_w_windwall") and not obj.name:lower():find("activate") then
-                                if YasuoWall ~= nil then
-                                    YasuoWall = nil
-                                end
-                            end
-                        end
-                    end
-                )
-            break 
-        end
+                end
+            end
+        )
     end
     PrintMessage("Added SPrediction, Fixed DivinePred, Have Fun!.")
     _G.SimpleLibLoaded = true
