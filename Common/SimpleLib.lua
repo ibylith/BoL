@@ -1,6 +1,6 @@
 local AUTOUPDATES = true
 local ScriptName = "SimpleLib"
-_G.SimpleLibVersion = 0.62
+_G.SimpleLibVersion = 0.64
 
 SPELL_TYPE = {LINEAR = 1, CIRCULAR = 2, CONE = 3, TARGETTED = 4, SELF = 5}
 
@@ -9,6 +9,7 @@ ORBWALK_MODE = {COMBO = 1, HARASS = 2, CLEAR = 3, LASTHIT = 4, NONE = -1}
 CIRCLE_MANAGER = {CIRCLE_2D = 1, CIRCLE_3D = 2, CIRCLE_MINIMAP = 3}
 
 LASTHIT_MODE = { NEVER = 1, SMART = 2, ALWAYS = 3}
+
 
 class "_CircleManager"
 class "_SpellManager"
@@ -412,7 +413,7 @@ end
  
 function _arrangePriorities()
     local priorityTable2 = {
-        p5 = {"Alistar", "Amumu", "Blitzcrank", "Braum", "ChoGath", "DrMundo", "Garen", "Gnar", "Hecarim", "JarvanIV", "Leona", "Lulu", "Malphite", "Nasus", "Nautilus", "Nunu", "Olaf", "Rammus", "Renekton", "Sejuani", "Shen", "Shyvana", "Singed", "Sion", "Skarner", "Taric", "Thresh", "Volibear", "Warwick", "MonkeyKing", "Yorick", "Zac"},
+        p5 = {"Alistar", "Amumu", "Blitzcrank", "Braum", "ChoGath", "DrMundo", "Garen", "Gnar", "Hecarim", "JarvanIV", "Leona", "Lulu", "Malphite", "Nasus", "Nautilus", "Nunu", "Olaf", "Rammus", "Renekton", "Sejuani", "Shen", "Shyvana", "Singed", "Sion", "Skarner", "TahmKench", "Taric", "Thresh", "Volibear", "Warwick", "MonkeyKing", "Yorick", "Zac"},
         p4 = {"Aatrox", "Darius", "Elise", "Evelynn", "Galio", "Gangplank", "Gragas", "Irelia", "Jax","LeeSin", "Maokai", "Morgana", "Nocturne", "Pantheon", "Poppy", "Rengar", "Rumble", "Ryze", "Swain","Trundle", "Tryndamere", "Udyr", "Urgot", "Vi", "XinZhao", "RekSai"},
         p3 = {"Akali", "Diana", "Fiddlesticks", "Fiora", "Fizz", "Heimerdinger", "Janna", "Jayce", "Kassadin","Kayle", "KhaZix", "Lissandra", "Mordekaiser", "Nami", "Nidalee", "Riven", "Shaco", "Sona", "Soraka", "Vladimir", "Yasuo", "Zilean", "Zyra"},
         p2 = {"Ahri", "Anivia", "Annie",  "Brand",  "Cassiopeia", "Ekko", "Karma", "Karthus", "Katarina", "Kennen", "LeBlanc",  "Lux", "Malzahar", "MasterYi", "Orianna", "Syndra", "Talon",  "TwistedFate", "Veigar", "VelKoz", "Viktor", "Xerath", "Zed", "Ziggs" },
@@ -1308,21 +1309,21 @@ function _Prediction:LoadPredictions()
             if self.HP == nil then
                 self.HP = HPrediction()
             end
-            end, 1)
+            end, 5)
     end
     if VIP_USER and FileExist(LIB_PATH.."DivinePred.lua") and FileExist(LIB_PATH.."DivinePred.luac") then 
         DelayAction(function() 
             if self.DP == nil then
                 self.DP = DivinePred()
             end
-            end, 1)
+            end, 5)
     end
     if FileExist(LIB_PATH.."SPrediction.lua") then 
         DelayAction(function() 
             if self.SP == nil then
                 self.SP = SPrediction()
             end
-            end, 1)
+            end, 5)
     end
 end
 
@@ -1524,7 +1525,9 @@ function _Prediction:GetPrediction(target, sp)
             local tab = {}
             range = GetDistance(source, myHero) + range
             local time = delay + range/speed
-            if time > 0.8 and width <= 100 then
+            if time > 1 and width <= 120 then
+                tab.IsVeryLowAccuracy = true
+            elseif time > 0.8 and width <= 100 then
                 tab.IsVeryLowAccuracy = true
             elseif time > 0.6 and width <= 60 then
                 tab.IsVeryLowAccuracy = true
@@ -3087,6 +3090,7 @@ if _G.SimpleLibLoaded == nil then
     r:Check()
     if r:IsDownloading() then return end
     DelayAction(function() CheckUpdate() end, 5)
+    DelayAction(function() _arrangePriorities() end, 12)
     OrbwalkManager = _OrbwalkManager()
     Prediction = _Prediction()
     CircleManager = _CircleManager()
@@ -3131,7 +3135,6 @@ if _G.SimpleLibLoaded == nil then
             end
         )
     end
-    PrintMessage("Added SPrediction, Fixed DivinePred, Have Fun!.")
     _G.SimpleLibLoaded = true
 end
 
