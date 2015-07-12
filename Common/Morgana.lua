@@ -1,16 +1,13 @@
-if myHero.charName ~= "Nidalee" or not VIP_USER then return end
-
-local version = 0.4
+if myHero.charName ~= "Morgana"  or not VIP_USER then return end
+local version = 0.3
 local AUTOUPDATE = true
-local SCRIPT_NAME = "SXNidalee"
+local SCRIPT_NAME = "SXMorgana"
 require 'VPrediction'
 require "SxOrbwalk"
 --require 'Prodiction' 0
 require 'Collision'
 require 'DivinePred'
 require 'HPrediction'
-require("SPrediction")
-
 
 
 -- Constants --
@@ -21,13 +18,11 @@ local qOff, wOff, eOff, rOff = 0,0,0,0
 local abilitySequence = {1,3,2,1,1,4,1,3,1,3,4,3,3,2,2,4,2,2}
 local Ranges = { AA = 450 }
 local skills = {
-	humanQ = {ready = true,range = 1525, width = 50, speed = 1800, delay = 0.5, cooldown = 0, level = 0, mana = 0},
-	humanW = {ready = true,range = 900, width = 100, speed = 1450, delay = 0.5, cooldown = 0, level = 0, mana = 0, },
-	humanE = {ready = true,range = 600, radius = 0, speed = math.huge, delay = 0, cooldown = 0, level = 0, mana = 0},
-	tigerQ = {ready = true,range = 50, radius = 0, speed = 500, delay = 0, cooldown = 0, level = 0},
-	tigerW = {ready = true,range = 375, radius = 75, speed = 1500, delay = 0.5, cooldown = 0, level = 0},
-	tigerE = {ready = true,range = 300, radius = 0, speed = math.huge, delay = 0, cooldown = 0, level = 0}, }
-
+	SkillQ = { ready = true, name = "Dark Binding", range = 1175, delay = 0.5, speed = 1200, width = 70.0 },
+	SkillW = { ready = true, name = "Tormented Soil", range = 900, delay = 0.5, speed = math.huge, width = 350.0 },
+	SkillE = { ready = true, name = "Black Shield", range = 750, delay = 0.5, speed = 1800, width = 0.0 },
+	SkillR = { ready = true, name = "Soul Shackles", range = 600, delay = 0.5, speed = math.huge, width = 600.0 },
+}
 --[[ Slots Itens ]]--
 local tiamatSlot, hydraSlot, youmuuSlot, bilgeSlot, bladeSlot, dfgSlot, divineSlot = nil, nil, nil, nil, nil, nil, nil
 local tiamatReady, hydraReady, youmuuReady, bilgeReady, bladeReady, dfgReady, divineReady = nil, nil, nil, nil, nil, nil, nil
@@ -44,13 +39,13 @@ local isMMA = false
 local target = nil
 
 function CheckUpdate()
-        local scriptName = "SXNidalee"
+        local scriptName = "SXMorgana"
         local version = 1.3
         local ToUpdate = {}
         ToUpdate.Version = version
         ToUpdate.Host = "raw.githubusercontent.com"
-        ToUpdate.VersionPath = "/syraxtepper/bolscripts/master/SXNidalee"..scriptName..".version"
-        ToUpdate.ScriptPath = "/syraxtepper/bolscripts/master/SXNidalee"..scriptName..".lua"
+        ToUpdate.VersionPath = "/syraxtepper/bolscripts/master/SXMorgana"..scriptName..".version"
+        ToUpdate.ScriptPath = "/syraxtepper/bolscripts/master/SXMorgana"..scriptName..".lua"
         ScriptUpdate(ToUpdate.Version, ToUpdate.Host, ToUpdate.VersionPath, ToUpdate.ScriptPath)
 end
 class "ScriptUpdate"
@@ -172,7 +167,24 @@ local shealrange = 300
 local lisrange = 600
 local FotMrange = 700
 
-
+if myHero.charName == "Karma" then
+	typeshield = 1
+	spellslot = _E
+	range = 800
+elseif myHero.charName == "LeeSin" then
+	typeshield = 1
+	spellslot = _W
+	range = 700
+elseif myHero.charName == "Lux" then
+	typeshield = 2
+	spellslot = _W
+	range = 1075
+  elseif myHero.charName == "Morgana" then
+	typeshield = 5
+	spellslot = _E
+	range = 750
+  end
+  
   local sbarrier = nil
 local sheal = nil
 local useitems = true
@@ -181,67 +193,64 @@ local casttype = nil
 local BShield,SShield,Shield,CC = false,false,false,false
 local shottype,radius,maxdistance = 0,0,0
 local hitchampion = false
-local divineQSkill = SkillShot.PRESETS['JavelinToss']
-local DP = DivinePred()
 
 function OnLoad()
 	if _G.ScriptLoaded then	return end
 	_G.ScriptLoaded = true
 	initComponents()
    HookPackets()
-  -- nidalee = Nidalee(existHP,existDP)
-   --[[
-   HPred:AddSpell("Q", "Nidalee", {type = "DelayLine", delay = 0.25, range = 1500, speed = 1200, width = 140})
-HPred:AddSpell("W", "Nidalee", {type = "PromptCircle", delay = 0.25, range = 1175, speed = math.huge, width = 140, radius = 28})--]]
-Bami = Menu.HP.W
-Nidalee_Q  = HPSkillshot({type = "DelayLine", delay = 0.125, range = 1500, speed = 1300, collisionM = true, collisionH = true, width = Bami, radius = 28, IsVeryLowAccuracy = true})
-
---HPSkillshot({type = "DelayLine", delay = 0.25, range = 1525, speed = 1200, collisionM = true, collisionH = true, width = 90, IsVeryLowAccuracy = true})
-Nidalee_W  = HPSkillshot({type = "PromptCircle", delay = 0.25, range = 1175, speed = 1200, width = 140, radius = 28})
-
-divineQSkill = SkillShot.PRESETS['JavelinToss']
-divineLastTime = GetGameTimer()
-divineCd = 0.4
+   
+   HPred:AddSpell("Q", "Morgana", {type = "DelayLine", delay = 0.25, range = 1175, speed = 1200, width = 140})
+HPred:AddSpell("W", "Karma", {type = "PromptCircle", delay = 0.25, range = 1175, speed = math.huge, width = 140, radius = 28})
      --[[
-   Spell_W.collisionM['Nidalee'] = false
-  Spell_W.collisionH['Nidalee'] = false -- or false (sometimes, it's better to not consider it)
-  Spell_W.delay['Nidalee'] = .25
-  Spell_W.range['Nidalee'] = 900
-  Spell_W.speed['Nidalee'] = 1200
-  --Spell_W.type['Nidalee'] = "DelayCircle" -- (it has tail like comet)
+   Spell_W.collisionM['Morgana'] = false
+  Spell_W.collisionH['Morgana'] = false -- or false (sometimes, it's better to not consider it)
+  Spell_W.delay['Morgana'] = .25
+  Spell_W.range['Morgana'] = 900
+  Spell_W.speed['Morgana'] = 1200
+  --Spell_W.type['Morgana'] = "DelayCircle" -- (it has tail like comet)
   
 
-Spell_W.type['Nidalee'] = "PromptCircle"
-Spell_W.radius['Nidalee'] = 28
-  Spell_W.width['Nidalee'] = 140
+Spell_W.type['Morgana'] = "PromptCircle"
+Spell_W.radius['Morgana'] = 28
+  Spell_W.width['Morgana'] = 140
   --Spell_W.type['Nidalee'] = "DelayCircle"
---Spell_W.radius['Nidalee'] = 350
+--Spell_W.radius['Morgana'] = 350
   
   --]]
 
 end
-Wrange = 0
-function JumpRange()
-  if Qhit then 
-    Wrange = 750
-  elseif not Qhit then
-    Wrange = 350
-  end
-  return Wrange 
-end
-
 function initComponents()
- 
- VP = VPrediction()
+ -- Prod = ProdictManager.GetInstance()
+ -- ProdQ = Prod:AddProdictionObject(_Q, 900, math.huge, 0.5, 110)  
+ --qPos = nil
+    -- VPrediction Start
+    
+    --[[Spell_Q.collisionM['Morgana'] = true
+  Spell_Q.collisionH['Morgana'] = true -- or false (sometimes, it's better to not consider it)
+  Spell_Q.delay['Morgana'] = .25
+  Spell_Q.range['Morgana'] = 1050
+  Spell_Q.speed['Morgana'] = 1200
+  Spell_Q.type['Morgana'] = "DelayLine" -- (it has tail like comet)
+  Spell_Q.width['Morgana'] = 80
   
+  
+   Spell_W.collisionM['Morgana'] = false
+  Spell_W.collisionH['Morgana'] = false -- or false (sometimes, it's better to not consider it)
+  Spell_W.delay['Morgana'] = .25
+  Spell_W.range['Morgana'] = 900
+  Spell_W.speed['Morgana'] = math.huge
+  Spell_W.type['Morgana'] = "DelayLine" -- (it has tail like comet)
+  Spell_W.width['Morgana'] = 240--]]
+ VP = VPrediction()
+  DP = DivinePred()
     HPred = HPrediction()
-    SP = SPrediction()
    -- SOW Declare
   -- Orbwalker = SOW(VP)
   -- Target Selector
-   ts = TargetSelector(TARGET_LESS_CAST_PRIORITY, 1525)
+   ts = TargetSelector(TARGET_LESS_CAST_PRIORITY, 900)
   
- Menu = scriptConfig("SXNidalee by SyraX", "NidaleeMA")
+ Menu = scriptConfig("SXMorgana by SyraX", "MorganaMA")
 
    if _G.MMA_Loaded ~= nil then
      PrintChat("<font color = \"#33CCCC\">MMA Status:</font> <font color = \"#fff8e7\"> Loaded</font>")
@@ -257,23 +266,20 @@ function initComponents()
    -- Menu:addTS(ts)
     end
     
- Menu:addSubMenu("["..myHero.charName.." - Combo]", "NidaleeCombo")
-    Menu.NidaleeCombo:addParam("combo", "Combo mode", SCRIPT_PARAM_ONKEYDOWN, false, 32)
-    Menu.NidaleeCombo:addSubMenu("Q Settings", "qSet")
-  Menu.NidaleeCombo.qSet:addParam("useQ", "Use Q in combo", SCRIPT_PARAM_ONOFF, true)
- Menu.NidaleeCombo:addSubMenu("W Settings", "wSet")
-  Menu.NidaleeCombo.wSet:addParam("useW", "Use W", SCRIPT_PARAM_ONOFF, false)
-  
+ Menu:addSubMenu("["..myHero.charName.." - Combo]", "MorganaCombo")
+    Menu.MorganaCombo:addParam("combo", "Combo mode", SCRIPT_PARAM_ONKEYDOWN, false, 32)
+    Menu.MorganaCombo:addSubMenu("Q Settings", "qSet")
+  Menu.MorganaCombo.qSet:addParam("useQ", "Use Q in combo", SCRIPT_PARAM_ONOFF, true)
+ Menu.MorganaCombo:addSubMenu("W Settings", "wSet")
+  Menu.MorganaCombo.wSet:addParam("useW", "Use W", SCRIPT_PARAM_ONOFF, false)
   
 
- Menu.NidaleeCombo:addSubMenu("E Settings", "eSet")
-  Menu.NidaleeCombo.eSet:addParam("useE", "Use E in combo", SCRIPT_PARAM_ONOFF, true)
-  Menu.NidaleeCombo.eSet:addParam("H", " Health under x % ", SCRIPT_PARAM_SLICE, 100, 0, 100, 0) 
-  --Menu.NidaleeCombo.eSet.H
- Menu.NidaleeCombo:addSubMenu("R Settings", "rSet")
-  Menu.NidaleeCombo.rSet:addParam("useR", "Use Smart Ultimate", SCRIPT_PARAM_ONOFF, true)
-  --Menu.NidaleeCombo.rSet:addParam("SelectR", "How you wanna cast R?", SCRIPT_PARAM_LIST, 1, {"Manual", "Let Script do it on count", "Spacebar + Leftclick"})
-  Menu.NidaleeCombo.rSet:addParam("RMode", "Use Ultimate enemy count:", SCRIPT_PARAM_SLICE, 1, 1, 5, 0)
+ Menu.MorganaCombo:addSubMenu("E Settings", "eSet")
+  Menu.MorganaCombo.eSet:addParam("useE", "Use E in combo", SCRIPT_PARAM_ONOFF, true)
+ Menu.MorganaCombo:addSubMenu("R Settings", "rSet")
+  Menu.MorganaCombo.rSet:addParam("useR", "Use Smart Ultimate", SCRIPT_PARAM_ONOFF, true)
+  --Menu.MorganaCombo.rSet:addParam("SelectR", "How you wanna cast R?", SCRIPT_PARAM_LIST, 1, {"Manual", "Let Script do it on count", "Spacebar + Leftclick"})
+  Menu.MorganaCombo.rSet:addParam("RMode", "Use Ultimate enemy count:", SCRIPT_PARAM_SLICE, 1, 1, 5, 0)
 --Menu.Combo:addParam("C2", "pref Q then W", SCRIPT_PARAM_ONOFF, false)
 
 
@@ -288,16 +294,7 @@ function initComponents()
   Menu.Laneclear:addParam("useClearQ", "Use Q in Laneclear", SCRIPT_PARAM_ONOFF, true)
  Menu.Laneclear:addParam("useClearW", "Use W in Laneclear", SCRIPT_PARAM_ONOFF, false)
     Menu.Laneclear:addParam("useClearE", "Use E in Laneclear", SCRIPT_PARAM_ONOFF, true)
-  --   if  Menu.ProdSettings.SelectProdiction == 1 then
- Menu:addSubMenu("["..myHero.charName.." - HPHitChance]","HP")
- Menu.HP:addParam("HPCS", "Finetune your Q Short range", SCRIPT_PARAM_SLICE, 1.5, 0.001, 5.000, 2.5)
- Menu.HP:addParam("HPCL", "Finetune your Q Long range", SCRIPT_PARAM_SLICE, 0.04, 0.00, 1, 3)
- Menu.HP:addParam("W", "Wigth", SCRIPT_PARAM_SLICE, 100, 40, 400, 0) 
-
  
- 
- 
--- end
  Menu:addSubMenu("["..myHero.charName.." - Jungleclear]", "Jungleclear")
     Menu.Jungleclear:addParam("jclr", "Jungleclear Key", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("V"))
   Menu.Jungleclear:addParam("useClearQ", "Use Q in Jungleclear", SCRIPT_PARAM_ONOFF, true)
@@ -306,8 +303,24 @@ function initComponents()
  
  Menu:addSubMenu("["..myHero.charName.." - Prodiction Settings]", "ProdSettings") -- Menu.ProdSettings.SelectProdiction
  -- Menu.selectProdSettings == 1 or 2
-	Menu.ProdSettings:addParam("SelectProdiction", "Select Prodiction", SCRIPT_PARAM_LIST, 1, {"Devine", "VPrediction", "HPrediction","Spred"})
- 
+	Menu.ProdSettings:addParam("SelectProdiction", "Select Prodiction", SCRIPT_PARAM_LIST, 1, {"Devine", "VPrediction", "HPrediction"})
+ Menu:addSubMenu("["..myHero.charName.." - Shield Settings]", "Shield")
+ --print("boss2")
+   if typeshield ~= nil then
+   --  print("boss")
+		for i=1, heroManager.iCount do
+			local teammate = heroManager:GetHero(i)
+			if teammate.team == myHero.team then Menu.Shield:addParam("teammateshield"..i, "Shield "..teammate.charName, SCRIPT_PARAM_ONOFF, true) end
+		end
+		Menu.Shield:addParam("maxhppercent", "Max percent of hp", SCRIPT_PARAM_SLICE, 100, 0, 100, 0)	
+		Menu.Shield:addParam("mindmgpercent", "Min dmg percent", SCRIPT_PARAM_SLICE, 20, 0, 100, 0)
+		Menu.Shield:addParam("mindmg", "Min dmg approx", SCRIPT_PARAM_INFO, 0)
+		Menu.Shield:addParam("skillshots", "Shield Skillshots", SCRIPT_PARAM_ONOFF, true)
+		Menu.Shield:addParam("shieldcc", "Auto Shield Hard CC", SCRIPT_PARAM_ONOFF, true)
+		Menu.Shield:addParam("shieldslow", "Auto Shield Slows", SCRIPT_PARAM_ONOFF, true)
+	--	ASConfig:addParam("drawcircles", "Draw Range", SCRIPT_PARAM_ONOFF, true)
+		Menu.Shield:permaShow("mindmg")
+  end
     
  Menu:addSubMenu("["..myHero.charName.." - Additionals]", "Ads")
     Menu.Ads:addParam("autoLevel", "Auto-Level Spells", SCRIPT_PARAM_ONOFF, false)
@@ -325,8 +338,8 @@ function initComponents()
   
  
   Menu.Ads:addSubMenu("VIP", "VIP")
-    --Menu.Ads.VIP:addParam("skin", "Use custom skin", SCRIPT_PARAM_ONOFF, false)
-  --Menu.Ads.VIP:addParam("skin1", "Skin changer", SCRIPT_PARAM_SLICE, 1, 1, 5)
+ --   Menu.Ads.VIP:addParam("skin", "Use custom skin", SCRIPT_PARAM_ONOFF, false)
+ -- Menu.Ads.VIP:addParam("skin1", "Skin changer", SCRIPT_PARAM_SLICE, 1, 1, 5)
 
   
  Menu:addSubMenu("["..myHero.charName.." - Drawings]", "drawings")
@@ -341,13 +354,15 @@ function initComponents()
  jungleMinions = minionManager(MINION_JUNGLE, 360, myHero, MINION_SORT_MAXHEALTH_DEC)
  
  if Menu.Ads.VIP.skin and VIP_USER then
-       GenModelPacket("Nidalee", Menu.Ads.VIP.skin1)
+       GenModelPacket("Morgana", Menu.Ads.VIP.skin1)
      lastSkin = Menu.Ads.VIP.skin1
     end
   
-  PrintChat("<font color = \"#FFA319\">SX</font><font color = \"#52524F\">Nidalee/font> <font color = \"#FFFFFF\">by</font><font color = \"#FF0066\"> SyraX</font><font color = \"#00FF00\"> V"..version.."</font>")
+  PrintChat("<font color = \"#FFA319\">SX</font><font color = \"#52524F\">Morgana/font> <font color = \"#FFFFFF\">by</font><font color = \"#FF0066\"> SyraX</font><font color = \"#00FF00\"> V"..version.."</font>")
 end
-isTiger = false
+
+ pis = false
+ kut = math.huge
 function OnTick()
 	target = GetCustomTarget()
 	targetMinions:update()
@@ -355,29 +370,9 @@ function OnTick()
 	jungleMinions:update()
 	CDHandler()
 	KillSteal()
- 
- -- print(brain())
---print(Qrange())
-    
---print(isTiger)
-  if myHero:GetSpellData(_Q).name == "JavelinToss" then
-	skills.humanQ.mana = myHero:GetSpellData(_Q).mana
- 
-  isTiger = false
-else 
-  isTiger = true 
-  end
-if myHero:GetSpellData(_W).name == "Bushwhack" then
-	skills.humanW.mana = myHero:GetSpellData(_W).mana
-end
-if myHero:GetSpellData(_E).name == "PrimalSurge" then
-	skills.humanE.mana = myHero:GetSpellData(_E).mana
-end
-
-isHuman = myHero:GetSpellData(_Q).name == "JavelinToss"
   --print(pis)
  -- print(typeshield)
-   
+  
   
   
   --print(Passive)
@@ -398,7 +393,7 @@ isHuman = myHero:GetSpellData(_Q).name == "JavelinToss"
  
 
 	if Menu.Ads.VIP.skin and VIP_USER and skinChanged() then
-		GenModelPacket("Nidalee", Menu.Ads.VIP.skin1)
+		GenModelPacket("Morgana", Menu.Ads.VIP.skin1)
 		lastSkin = Menu.Ads.VIP.skin1
 	end 
   --[[for i = 1, heroManager.iCount do
@@ -480,7 +475,7 @@ if click == 2 then
 		AutoLevel()
 	end
 	
-	if Menu.NidaleeCombo.combo then
+	if Menu.MorganaCombo.combo then
 		Combo()
 	end
 	
@@ -500,10 +495,10 @@ end
 
 function CDHandler()
 	-- Spells
-	skills.humanQ.ready = (myHero:CanUseSpell(_Q) == READY)
-	skills.humanW.ready = (myHero:CanUseSpell(_W) == READY)
-	skills.humanE.ready = (myHero:CanUseSpell(_E) == READY)
-	--skills.humanR.ready = (myHero:CanUseSpell(_R) == READY)
+	skills.SkillQ.ready = (myHero:CanUseSpell(_Q) == READY)
+	skills.SkillW.ready = (myHero:CanUseSpell(_W) == READY)
+	skills.SkillE.ready = (myHero:CanUseSpell(_E) == READY)
+	skills.SkillR.ready = (myHero:CanUseSpell(_R) == READY)
 
 	-- Items
 	tiamatSlot = GetInventorySlotItem(3077)
@@ -533,34 +528,27 @@ DamageCalculation()
 end-- Harass --
 
 function Harass()	
- 
-	if target ~= nil and target.type == myHero.type and target.team ~= myHero.team then
+	if target ~= nil and ValidTarget(target) then
     if  Menu.ProdSettings.SelectProdiction == 2 then
-      if Menu.Harass.useQ and ValidTarget(target, skills.humanQ.range) and skills.humanQ.ready then
-        local CastPosition, HitChance, Position = VP:GetLineCastPosition(target, skills.humanQ.delay, skills.humanQ.width, skills.humanQ.range, skills.humanQ.speed, myHero, true)
-           if  GetDistance(CastPosition) < 1500 then
+      if Menu.Harass.useQ and ValidTarget(target, skills.SkillQ.range) and skills.SkillQ.ready then
+        local CastPosition, HitChance, Position = VP:GetLineCastPosition(target, skills.SkillQ.delay, skills.SkillQ.width, skills.SkillQ.range, skills.SkillQ.speed, myHero, true)
+           if HitChance >= 2 and GetDistance(CastPosition) < 1175 then
 				CastSpell(_Q, CastPosition.x, CastPosition.z)
        -- print("301")
-          end
-        end
-       
-    elseif Menu.ProdSettings.SelectProdiction == 1 and Menu.Harass.useQ and ValidTarget(target, skills.humanQ.range) and skills.humanQ.ready then
+            end
+    elseif Menu.ProdSettings.SelectProdiction == 1 and Menu.Harass.useQ and ValidTarget(target, skills.SkillQ.range) and skills.SkillQ.ready then
           DevineQ()
-    elseif Menu.ProdSettings.SelectProdiction == 3 and Menu.Harass.useQ and ValidTarget(target, skills.humanQ.range) and skills.humanQ.ready then
+    elseif Menu.ProdSettings.SelectProdiction == 3 then
     CastQ()
-  elseif Menu.ProdSettings.SelectProdiction == 4 and Menu.Harass.useQ and ValidTarget(target, skills.humanQ.range) and skills.humanQ.ready then
-    spQ()
-  
-  --  print("stap1")
   end
 end
-       if target ~= nil and target ~= nil and skills.humanW.ready then
+       if target ~= nil and target ~= nil and skills.SkillW.ready then
                 
-  if ValidTarget(target, skills.humanW.range) and skills.humanW.ready and not target.dead then
+  if ValidTarget(target, skills.SkillW.range) and skills.SkillW.ready and not target.dead then
   if Menu.ProdSettings.SelectProdiction == 2 then
    
-  AOECastPosition, MainTargetHitChance, nTargets = VP:GetCircularAOECastPosition(target, skills.humanW.delay, skills.humanW.width, skills.humanW.range, skills.humanW.speed, myHero)
-      if GetDistance(AOECastPosition) <= skills.humanW.range and MainTargetHitChance >= 2 then
+  AOECastPosition, MainTargetHitChance, nTargets = VP:GetCircularAOECastPosition(target, skills.SkillW.delay, skills.SkillW.width, skills.SkillW.range, skills.SkillW.speed, myHero)
+      if GetDistance(AOECastPosition) <= skills.SkillW.range and MainTargetHitChance >= 2 then
           Packet("S_CAST", {spellId = _W, fromX = AOECastPosition.x, fromY = AOECastPosition.z, toX = AOECastPosition.x, toY = AOECastPosition.z}):send()
       end
    
@@ -568,23 +556,25 @@ end
       
     elseif Menu.ProdSettings.SelectProdiction == 1 then
       DevineW()
-    elseif Menu.ProdSettings.SelectProdiction == 3 then
+    elseif Menu.ProdSetting.SelectProdiction == 3 then
       CastW()
       end
     --  print("wajoo")
     end
 	end
 
+
+
 end
-
-
+-- End Harass --
+end
 function DevineW()
- 
-  if target ~= nil and target.type == myHero.type and skills.humanW.ready and ValidTarget(target, skills.humanW.range) then
+ -- print("piep")
+  if target ~= nil and target.type == myHero.type and skills.SkillW.ready and ValidTarget(target, skills.SkillW.range) then
   if Menu.ProdSettings.SelectProdiction == 1 then
 			local target = DPTarget(target)
-			local NidaleeW = LineSS(skills.humanW.speed, skills.humanW.range, skills.humanW.width, skills.humanW.delay, 0)
-			local State, Position, perc = DP:predict(target, NidaleeW)
+			local MorganaW = LineSS(skills.SkillW.speed, skills.SkillW.range, skills.SkillW.width, skills.SkillW.delay, 0)
+			local State, Position, perc = DP:predict(target, MorganaW)
 			if State == SkillShot.STATUS.SUCCESS_HIT then 
        -- print("goed zo")
 				
@@ -602,8 +592,8 @@ function DevineQ()
   if target ~= nil and target.type == myHero.type then
   if Menu.ProdSettings.SelectProdiction == 1 then
 			local target = DPTarget(target)
-		--	local NidaleeQ = LineSS(target, divineQSkill)
-			local State, Position, perc = DP:predict(target, divineQSkill)
+			local MorganaQ = LineSS(skills.SkillQ.speed, skills.SkillQ.range, skills.SkillQ.width, skills.SkillQ.delay, 0)
+			local State, Position, perc = DP:predict(target, MorganaQ)
 			if State == SkillShot.STATUS.SUCCESS_HIT then 
 				
       Packet("S_CAST", {spellId = _Q, fromX = Position.x, fromY = Position.z, toX = Position.x, toY = Position.z}):send()
@@ -630,7 +620,7 @@ end
 function AreaEnemyCount()
 	local count = 0
 		for _, enemy in pairs(GetEnemyHeroes()) do
-			if enemy and not enemy.dead and enemy.visible and GetDistance(myHero, enemy) < skills.humanE.range then
+			if enemy and not enemy.dead and enemy.visible and GetDistance(myHero, enemy) < skills.SkillE.range then
 				count = count + 1
 			end
 		end              
@@ -654,52 +644,40 @@ end
 function AllInCombo(target, typeCombo)
 	if target ~= nil and typeCombo == 0 and target.type == myHero.type and target.team ~= myHero.team then
 		ItemUsage(target)
-    if not isTiger then
-   --[[ if ValidTarget(target, skills.humanR.range) and AreaEnemyCount() >= Menu.NidaleeCombo.rSet.RMode then
-       if Menu.NidaleeCombo.rSet.useR  then 
+    if ValidTarget(target, skills.SkillR.range) and AreaEnemyCount() >= Menu.MorganaCombo.rSet.RMode then
+       if Menu.MorganaCombo.rSet.useR  then 
         CastSpell(_R)
        end
-    end--]]
+    end
     
     if  Menu.ProdSettings.SelectProdiction == 2 then
     --  print("check3")
-      if Menu.NidaleeCombo.qSet.useQ and ValidTarget(target, skills.humanQ.range) and skills.humanQ.ready then
-        local CastPosition, HitChance, Position = VP:GetLineCastPosition(target, skills.humanQ.delay, skills.humanQ.width, skills.humanQ.range, skills.humanQ.speed, myHero, true)
-           if  GetDistance(CastPosition) < 1500 then
+      if Menu.MorganaCombo.qSet.useQ and ValidTarget(target, skills.SkillQ.range) and skills.SkillQ.range then
+			local CastPosition, HitChance, Position = VP:GetLineCastPosition(target, skills.SkillQ.delay, skills.SkillQ.width, skills.SkillQ.range, skills.SkillQ.speed, myHero, true)
+      --print("check 2")
+            if HitChance >= 2 and GetDistance(CastPosition) < 1175 then
+             -- print("check1")
 				CastSpell(_Q, CastPosition.x, CastPosition.z)
        -- print("301")
             end
     end
   elseif Menu.ProdSettings.SelectProdiction == 1 then
-    if Menu.NidaleeCombo.qSet.useQ and ValidTarget(target, skills.humanQ.range) and skills.humanQ.ready then
+    if Menu.MorganaCombo.qSet.useQ and ValidTarget(target, skills.SkillQ.range) and skills.SkillQ.range then
       DevineQ()
     end
   elseif Menu.ProdSettings.SelectProdiction == 3 then
-    if Menu.NidaleeCombo.qSet.useQ and ValidTarget(target, skills.humanQ.range) and skills.humanQ.ready  then 
+    if Menu.MorganaCombo.qSet.useQ and ValidTarget(target, skills.SkillQ.range) and skills.SkillQ.range  then 
       CastQ()
     end
-  elseif Menu.ProdSettings.SelectProdiction == 4 then
-      if Menu.NidaleeCombo.qSet.useQ and ValidTarget(target, skills.humanQ.range) and skills.humanQ.ready  then 
-      spQ()
-    end
-    end
-    
-if skills.humanE.ready then
-  local Max = myHero.maxHealth / 100
-  local Menu = Menu.NidaleeCombo.eSet.H
-  local HH = Max * Menu
-  if myHero.health <= HH then
-  --  CastSpell(_E, myHero)
   end
-end
 
-  if target ~= nil and target ~= nil and skills.humanW.ready then
-    if Menu.NidaleeCombo.wSet.useW and ValidTarget(target, skills.humanW.range) and skills.humanW.ready and not target.dead then
+  if target ~= nil and target ~= nil and skills.SkillW.ready then
+    if Menu.MorganaCombo.wSet.useW and ValidTarget(target, skills.SkillW.range) and skills.SkillW.ready and not target.dead then
      
         if Menu.ProdSettings.SelectProdiction == 2 then
    --print("kaas")
-  AOECastPosition, MainTargetHitChance, nTargets = VP:GetCircularAOECastPosition(target, skills.humanW.delay, skills.humanW.range, skills.humanW.speed, skills.humanW.width, myHero)
-        if GetDistance(AOECastPosition, myHero) <= skills.humanW.range and MainTargetHitChance >= 2 then
+  AOECastPosition, MainTargetHitChance, nTargets = VP:GetCircularAOECastPosition(target, skills.SkillW.delay, skills.SkillW.width, skills.SkillW.range, skills.SkillW.speed, myHero)
+        if GetDistance(AOECastPosition, myHero) <= skills.SkillW.range and MainTargetHitChance >= 2 then
           Packet("S_CAST", {spellId = _W, fromX = AOECastPosition.x, fromY = AOECastPosition.z, toX = AOECastPosition.x, toY = AOECastPosition.z}):send()
         end
          
@@ -707,13 +685,9 @@ end
     elseif Menu.ProdSettings.SelectProdiction == 1 then
       DevineW()
     --  print("wajoo")
-  elseif Menu.ProdSettings.SelectProdiction == 3 or Menu.ProdSettings.SelectProdiction == 4 then
+  elseif Menu.ProdSettings.SelectProdiction == 3 then
     CastW()
 	end
-  
-end
-if Qhit and brain() then
-TransForm()
 end
   --  print("check2")
     
@@ -723,105 +697,42 @@ end
 
 	
 	end
-elseif isTiger then
-  
-  if target ~= nil and target.type == myHero.type and target.team ~= myHero.team then
-    if skills.tigerE.ready and Menu.NidaleeCombo.eSet.useE and ValidTarget(target, skills.tigerE.range) and not target.dead then
-    
-      CastSpell(_E, target)
-    end
-    if  skills.tigerQ.ready and Menu.NidaleeCombo.qSet.useQ and ValidTarget(target, skills.tigerQ.range) and not target.dead then
-      CastSpell(_Q, target)
-    --  print("baas")
-    end
-    if skills.tigerW.ready and Menu.NidaleeCombo.wSet.useW and ValidTarget(target, JumpRange()) and not target.dead then
-      --if NidaleeCanHitW(target) then
-    --  print(" lol ?")
-        CastSpell(_W, target.x, target.z)
-      --  end
-    end
-    
-  
-  end
-end
-if brain() then
-TransForm()
 end
 end
 
-end
+
 -- All In Combo --
 
 
 function LaneClear()
 	for i, targetMinion in pairs(targetMinions.objects) do
 		if targetMinion ~= nil then
-      if isTiger then
-        if Menu.Laneclear.useClearQ and skills.humanQ.ready and ValidTarget(targetMinion, skills.humanQ.range) then
-				CastSpell(_Q, targetMinion)
-        end
-        if Menu.Laneclear.useClearW and skills.humanW.ready and ValidTarget(targetMinion, skills.humanW.range) then
-				CastSpell(_W, targetMinion.x, targetMinion.z)
-        end
-        if Menu.Laneclear.useClearE and skills.humanE.ready and ValidTarget(targetMinion, skills.humanE.range) then
-				CastSpell(_E, targetMinion)
-      end
-      TransForm()
-    elseif not isTimer then
-            if Menu.Laneclear.useClearQ and skills.humanQ.ready and ValidTarget(targetMinion, skills.humanQ.range) then
+			if Menu.Laneclear.useClearQ and skills.SkillQ.ready and ValidTarget(targetMinion, skills.SkillQ.range) then
 				CastSpell(_Q, targetMinion.x, targetMinion.z)
-        end
-        if Menu.Laneclear.useClearW and skills.humanW.ready and ValidTarget(targetMinion, skills.humanW.range) then
-				CastSpell(_W, targetMinion.x, targetMinion.z)
-        end
-       
-      end
-      
+			end
+			if Menu.Laneclear.useClearW and skills.SkillW.ready and ValidTarget(targetMinion, skills.SkillW.range) then
+				CastSpell(_W)
+			end
+			if Menu.Laneclear.useClearE and skills.SkillE.ready and ValidTarget(targetMinion, skills.SkillE.range) then
+				CastSpell(_E, targetMinion)
+			end
 		end
 		
 	end
 end
 
 function JungleClear()
- -- print("stap1")
 	for i, jungleMinion in pairs(jungleMinions.objects) do
-  --   print("stap2")
 		if jungleMinion ~= nil then
-    --   print("stap3")
-   SxOrb:Attack(jungleMinion)
-      if not isTiger then
-        if not skills.humanQ.ready and not skills.humanW.ready then
-          TransForm()
-        end
-			if Menu.Jungleclear.useClearQ and skills.humanQ.ready and ValidTarget(jungleMinion, skills.humanQ.range) then
-       -- print("_q")
+			if Menu.Jungleclear.useClearQ and skills.SkillQ.ready and ValidTarget(jungleMinion, skills.SkillQ.range) then
 				CastSpell(_Q, jungleMinion.x, jungleMinion.z)
 			end
-			if Menu.Jungleclear.useClearW and skills.humanW.ready and ValidTarget(jungleMinion, skills.humanW.range) then
-				CastSpell(_W, jungleMinion.x, jungleMinion.z)
+			if Menu.Jungleclear.useClearW and skills.SkillW.ready and ValidTarget(jungleMinion, skills.SkillW.range) then
+				CastSpell(_W, jungleMinion)
 			end
-			if Menu.Jungleclear.useClearE and skills.humanE.ready and ValidTarget(jungleMinion, skills.humanE.range) then
-				CastSpell(_E, myHero)
+			if Menu.Jungleclear.useClearE and skills.SkillE.ready and ValidTarget(jungleMinion, skills.SkillE.range) then
+				CastSpell(_W, jungleMinion)
 			end
-      if QHit then
-        TransForm()
-      end
-    elseif isTiger then
-     if skills.humanQ.ready then
-          CastSpell(_R, myHero)
-        end
-      --print(Menu.Jungleclear.useClearQ )
-      if Menu.Jungleclear.useClearQ and skills.tigerQ.ready and ValidTarget(jungleMinion, skills.tigerQ.range) then
-       -- print("_q")
-				CastSpell(_Q, jungleMinion)
-			end
-			if Menu.Jungleclear.useClearW and skills.tigerW.ready and ValidTarget(jungleMinion, skills.tigerW.range) then
-				CastSpell(_W, jungleMinion.x, jungleMinion.z)
-			end
-			if Menu.Jungleclear.useClearE and skills.tigerE.ready and ValidTarget(jungleMinion, skills.tigerE.range) then
-				CastSpell(_E, jungleMinion)
-			end
-      end
 		end
 	end
 end
@@ -845,7 +756,7 @@ function KillSteal()
 		IgniteKS()
 	end
   if  Menu.Ads.KS.KS  then
-    KS()
+    KS2()
   end
    
   
@@ -964,7 +875,7 @@ function DamageCalculation()
       rDmg = getDmg("R", enemy,myHero)
       dfgDmg = getDmg("DFG", enemy, myHero)
 
-      if not skills.humanQ.ready and not skills.humanW.ready and not skills.humanE.ready then
+      if not skills.SkillQ.ready and not skills.SkillW.ready and not skills.SkillE.ready and not skills.SkillR.ready then
         KillText[i] = TextList[8]
         return
       end
@@ -1003,11 +914,11 @@ function DamageCalculation()
 end
 
 function OnDraw()    if not myHero.dead then
-        if Menu.drawings.drawAA then DrawCircle(myHero.x, myHero.y, myHero.z, Ranges.AA, ARGB(25 , 255,0,0)) end
-        if Menu.drawings.drawQ then DrawCircle(myHero.x, myHero.y, myHero.z, 1500, ARGB(25 , 255,0,0)) end
-        if Menu.drawings.drawW then DrawCircle(myHero.x, myHero.y, myHero.z, skills.humanW.range, ARGB(25 ,255,0,0)) end
-        if Menu.drawings.drawE then DrawCircle(myHero.x, myHero.y, myHero.z, skills.humanE.range, ARGB(25 , 255,0,0)) end
- 
+        if Menu.drawings.drawAA then DrawCircle(myHero.x, myHero.y, myHero.z, Ranges.AA, ARGB(25 , 145, 0, 161)) end
+        if Menu.drawings.drawQ then DrawCircle(myHero.x, myHero.y, myHero.z, skills.SkillQ.range, ARGB(25 , 145, 0, 161)) end
+        if Menu.drawings.drawW then DrawCircle(myHero.x, myHero.y, myHero.z, skills.SkillW.range, ARGB(25 , 145, 0, 161)) end
+        if Menu.drawings.drawE then DrawCircle(myHero.x, myHero.y, myHero.z, skills.SkillE.range, ARGB(25 , 145, 0, 161)) end
+        if Menu.drawings.drawR then DrawCircle(myHero.x, myHero.y, myHero.z, skills.SkillR.range, ARGB(25 , 145, 0, 161)) end
     end
 if _G.ShowTextDraw then
     for i = 1, heroManager.iCount do
@@ -1024,7 +935,7 @@ if _G.ShowTextDraw then
 	    end
 	end
 end
-if not myHero.dead and target ~= nil and	target.team ~= myHero.team and target.type == myHero.type then 
+if not myHero.dead and target ~= nil and	target.team ~= myHero.team and target.type ~= myHero.type then 
 		--	if Settings.drawing.text then 
 				DrawText3D("Focus This Bitch!",target.x-100, target.y-50, target.z, 20, 0xFFFF9900) --0xFF9900
 			end
@@ -1032,7 +943,9 @@ end
 
 ulti = false
 ultitime = math.huge
+function OnProcessSpell(unit, spell)
 
+end
 
 
 
@@ -1059,7 +972,7 @@ end
 --[[
 function CastQ(unit,pos)
     if target ~= nil and not ult then 
-      if GetDistance(pos) < skills.humanQ.range and skills.humanQ.ready then
+      if GetDistance(pos) < skills.SkillQ.range and skills.SkillQ.ready then
 
    
                 CastSpell(_Q, pos.x, pos.z)
@@ -1089,7 +1002,7 @@ function OnTowerFocus(tower, unit)
   if unit ~= nil then
        if tower.team == myHero.team then
          if unit.team ~= myHero.team then
-             if target ~= nil and ValidTarget(target, skills.humanR.range) and skills.humanR.ready and target.type == myHero.type and target.team ~= myHero.team then
+             if target ~= nil and ValidTarget(target, skills.SkillR.range) and skills.SkillR.ready and target.type == myHero.type and target.team ~= myHero.team then
       CastSpell(_R, target)
     end
        end
@@ -1112,7 +1025,7 @@ end
 
 function TurretStun()
   for _, enemy in ipairs(GetEnemyHeroes()) do
-    if UnitAtTower(enemy, 0) and GetDistanceSqr(enemy) <= skills.humanR.range^2 then
+    if UnitAtTower(enemy, 0) and GetDistanceSqr(enemy) <= skills.SkillR.range^2 then
       CastSpell(_R, enemy)
     end
   end
@@ -1162,83 +1075,62 @@ function OnWndMsg(Msg, Key)
         
 	end
 
+function KS2()
+    if target ~= nil and target.type == myHero.type and target.team ~= myHero.team  then
+      for i=1, heroManager.iCount do
+      local enemy = heroManager:GetHero(i)
+        if ValidTarget(enemy) and enemy ~= nil then
+        qDmg = getDmg("Q", enemy,myHero)
+        eDmg = getDmg("E", enemy,myHero)
+        rDmg = getDmg("R", enemy,myHero)
+        wDmg = getDmg("W", enemy,myHero)
+      
+          if target ~= nil and skills.SkillQ.ready and ValidTarget(target, skills.SkillQ.range) and target.health < qDmg then
+            if Menu.MorganaCombo.qSet.useQ and Menu.ProdSettings.SelectProdiction == 1 then
+          --ProdQ:GetPredictionCallBack(target, CastQ)
+            DevineQ()
+            elseif Menu.ProdSettings.SelectProdiction == 2 then
+              if Menu.MorganaCombo.qSet.useQ and ValidTarget(target, skills.SkillQ.range) and skills.SkillQ.range then
+                local CastPosition, HitChance, Position = VP:GetLineCastPosition(target, skills.SkillQ.delay, skills.SkillQ.width, skills.SkillQ.range, skills.SkillQ.speed, myHero, true)
+                if HitChance >= 2 and GetDistance(CastPosition) < 1175 then
+                  CastSpell(_Q, CastPosition.x, CastPosition.z)
+                end
+              end
+        
+
+          elseif Menu.MorganaCombo.eSet.useE and Menu.ProdSettings.SelectProdiction == 1 then
+            DevineQ()
+          elseif Menu.MorganaCombo.eSet.useE and Menu.ProdSettings.SelectProdiction == 3 then
+            CastQ()
+  
+   
+            end
+          end 
+end
+
+
+             end
+            end
+      end
+  
 Qhit = false
 function OnApplyBuff(source, unit, buff)
---if buff then print(buff.name) end
   if buff and unit.type == myHero.type and unit.team ~= myHero.team and unit.type == myHero.type then
-    if buff.name:find("nidaleepassivehunted") then
+    if buff.name:find("DarkBindingMissile") then
       Qhit =  true
-
+     
   end
   end
 end
 function OnRemoveBuff(unit, buff)
   if buff and unit.type == myHero.type and unit.team ~= myHero.team and unit.type == myHero.type then
-    if buff.name:find("nidaleepassivehunted") then
+    if buff.name:find("DarkBindingMissile") then
       Qhit = false
      
   end
   end
 end
 
-function CastQ()
-  --print("castQ")
-  
-  if target ~= nil and target.type == myHero.type and target.team ~= myHero.team then
- -- QPos, QHitChance = HPred:GetPredict("Q", target, myHero)
-  local QPos, QHitchance = HPred:GetPredict(Nidalee_Q, target, myHero)
-  --print(QHitchance)
-  --print("CAstQ@")
- -- print(QHitchance)
-  if QHitchance >= Menu.HP.HPCS and ValidTarget(target, 1200) then
-    --print("short")
-  --print("laastecheck")
-    if VIP_USER then
-      Packet("S_CAST", {spellId = _Q, toX = QPos.x, toY = QPos.z, fromX = QPos.x, fromY = QPos.z}):send()
-    --  print("castQ3")
-    else
-      CastSpell(_Q, QPos.x, QPos.z)
-    end
-    
-    
-  elseif QHitchance >=  Menu.HP.HPCL and GetDistance(target) > 1200 then
-   -- print("long")
-  --print("laastecheck")
-    if VIP_USER then
-      Packet("S_CAST", {spellId = _Q, toX = QPos.x, toY = QPos.z, fromX = QPos.x, fromY = QPos.z}):send()
-    --  print("castQ3")
-    else
-      CastSpell(_Q, QPos.x, QPos.z)
-    end
-  --print("laastecheck")
-
-end
-end
-  end
-  
-    
-    function CastW()
-  --print("castE")
-  if target ~= nil then
-    
-local WPos, WHitchance = HPred:GetPredict(Nidalee_W, target, myHero)
- -- EPos, EHitChance = HPred:GetPredict("E", target, myHero)
-  
-  --print("CAstE@")
-  if WHitchance >= 1 then
-  --print("laastecheck")
-    if VIP_USER then
-      Packet("S_CAST", {spellId = _W, toX = WPos.x, toY = WPos.z, fromX = WPos.x, fromY = WPos.z}):send()
-    --  print("castE3")
-    else
-      CastSpell(_W, WPos.x, WPos.z)
-    end
-    
-  end
-  
-end
-end
---[[
 function CastW()
   if target ~= nil then
   WPos, WHitChance = HPred:GetPredict("W", target, myHero)
@@ -1275,7 +1167,7 @@ function CastQ()
 end
 end
 
---]]
+
 function UnitAtTower(unit,offset)
   for i, turret in pairs(GetTurrets()) do
     if turret ~= nil then
@@ -1306,7 +1198,7 @@ local healslot
 local range = 0
 local shealrange = 300
 local FotMrange = 700
-if myHero.charName == "Nidalee" then
+if myHero.charName == "Morgana" then
 	typeshield = 5
 	spellslot = _E
 	range = 750
@@ -1324,173 +1216,158 @@ local hitchampion = false--]]
 
 --[[ thx to bol autoshield!--]]
 
-    function Calcu(target)
-local totalDamage = 0
 
-local tigerQ=0
-local tigerW=0
-local tigerE=0
+ function OnProcessSpell(object,spell)
+	if object.team ~= myHero.team and not myHero.dead and object.type == myHero.type then -- not (object.name:find("Minion_") or object.name:find("Odin")) then
 
-local baseDamageQ=0
-local baseDamageW=0
-local baseDamageE=0
+		local shieldREADY = typeshield ~= nil and myHero:CanUseSpell(spellslot) == READY and leesinW
+		--local healREADY = typeheal ~= nil and myHero:CanUseSpell(healslot) == READY and nidaleeE
+		--local ultREADY = typeult ~= nil and myHero:CanUseSpell(ultslot) == READY
+		--local wallREADY = wallslot ~= nil and myHero:CanUseSpell(wallslot) == READY
+		--local sbarrierREADY = sbarrier ~= nil and myHero:CanUseSpell(sbarrier) == READY
+	--	local shealREADY = sheal ~= nil and myHero:CanUseSpell(sheal) == READY
+	--	local lisslot = GetInventorySlotItem(3190)
+	--	local seslot = GetInventorySlotItem(3040)
+	--	local FotMslot = GetInventorySlotItem(3401)
+		--local lisREADY = lisslot ~= nil and myHero:CanUseSpell(lisslot) == READY
+		--local seREADY = seslot ~= nil and myHero:CanUseSpell(seslot) == READY
+		--local FotMREADY = FotMslot ~= nil and myHero:CanUseSpell(FotMslot) == READY
+		local HitFirst = false
+		local shieldtarget,SLastDistance,SLastDmgPercent = nil,nil,nil
+    YWall,BShield,SShield,Shield,CC = false,false,false,false,false
+		shottype,radius,maxdistance = 0,0,0
+		if object.type == "AIHeroClient" then
+			spelltype, casttype = getSpellType(object, spell.name)
+			if casttype == 4 or casttype == 5 or casttype == 6 then return end
+			if spelltype == "BAttack" or spelltype == "CAttack" then
+				Shield = true
+        --print("dwaas222")
+        elseif spell.name:find("SummonerDot") then
+				Shield = true
+			elseif spelltype == "Q" or spelltype == "W" or spelltype == "E" or spelltype == "R" or spelltype == "P" or spelltype == "QM" or spelltype == "WM" or spelltype == "EM" then
+				HitFirst = skillShield[object.charName][spelltype]["HitFirst"]
+				YWall = skillShield[object.charName][spelltype]["YWall"]
+				BShield = skillShield[object.charName][spelltype]["BShield"]
+				SShield = skillShield[object.charName][spelltype]["SShield"]
+				Shield = skillShield[object.charName][spelltype]["Shield"]
+				CC = skillShield[object.charName][spelltype]["CC"]
+				shottype = skillData[object.charName][spelltype]["type"]
+				radius = skillData[object.charName][spelltype]["radius"]
+				maxdistance = skillData[object.charName][spelltype]["maxdistance"]
+			end
+		else
+			Shield = true
+		end
+		for i=1, heroManager.iCount do
+			local allytarget = heroManager:GetHero(i)
+			if allytarget.team == myHero.team and not allytarget.dead and allytarget.health > 0 then
+				hitchampion = false
+				local allyHitBox = allytarget.boundingRadius
+				if shottype == 0 then hitchampion = spell.target and spell.target.networkID == allytarget.networkID
+				elseif shottype == 1 then hitchampion = checkhitlinepass(object, spell.endPos, radius, maxdistance, allytarget, allyHitBox)
+				elseif shottype == 2 then hitchampion = checkhitlinepoint(object, spell.endPos, radius, maxdistance, allytarget, allyHitBox)
+				elseif shottype == 3 then hitchampion = checkhitaoe(object, spell.endPos, radius, maxdistance, allytarget, allyHitBox)
+				elseif shottype == 4 then hitchampion = checkhitcone(object, spell.endPos, radius, maxdistance, allytarget, allyHitBox)
+				elseif shottype == 5 then hitchampion = checkhitwall(object, spell.endPos, radius, maxdistance, allytarget, allyHitBox)
+				elseif shottype == 6 then hitchampion = checkhitlinepass(object, spell.endPos, radius, maxdistance, allytarget, allyHitBox) or checkhitlinepass(object, Vector(object)*2-spell.endPos, radius, maxdistance, allytarget, allyHitBox)
+				elseif shottype == 7 then hitchampion = checkhitcone(spell.endPos, object, radius, maxdistance, allytarget, allyHitBox)
+				end
+    --[[   
+    Menu.maxhppercent
+    Menu.mindmgpercent
+    Menu.mindmg
+    Menu.skillshots
+    Menu.shieldcc
+    Menu.shieldslow--]]
+    if hitchampion then
+      --print("dwaas")
+					if skills.SkillE.ready and Menu.Shield["teammateshield"..i] and ((typeshield<=4 and Shield) or (typeshield==5 and BShield) or (typeshield==6 and SShield)) then
+						if (((typeshield==1 or typeshield==2 or typeshield==5) and GetDistance(allytarget)<=range) or allytarget.isMe) then
+							local shieldflag, dmgpercent = shieldCheck(object,spell,allytarget,"shields")
+							if shieldflag then
+								if HitFirst and (SLastDistance == nil or GetDistance(allytarget,object) <= SLastDistance) then
+									shieldtarget,SLastDistance = allytarget,GetDistance(allytarget,object)
+								elseif not HitFirst and (SLastDmgPercent == nil or dmgpercent >= SLastDmgPercent) then
+									shieldtarget,SLastDmgPercent = allytarget,dmgpercent
+								end
+							end
+						end
+					end    
+		if shieldtarget ~= nil then
+			if typeshield==1 or typeshield==5 then CastSpell(spellslot,shieldtarget)
+			elseif typeshield==2 or typeshield==4 then CastSpell(spellslot,shieldtarget.x,shieldtarget.z)
+			elseif typeshield==3 or typeshield==6 then CastSpell(spellslot) end
+		end
+	
+end
+end
+end
+end
+end
 
-if skills.tigerQ.cooldown <= GetGameTimer() then
-	if skills.tigerQ.level == 1 then baseDamageQ = 4
-	elseif skills.tigerQ.level == 2 then baseDamageQ = 20
-	elseif skills.tigerQ.level == 3 then baseDamageQ = 50
-	elseif skills.tigerQ.level >= 4 then baseDamageQ = 90
+function shieldCheck(object,spell,target,typeused)
+	local Kiesma
+	if typeused == "shields" then Kiesma = Menu -- dit moet gewoon nagekekekn worden puntje.
+	local shieldflag = false
+	if (not Menu.Shield.skillshots and shottype ~= 0) then return false, 0 end  --- ook dit is een aandacht puntje
+	local adamage = object:CalcDamage(target,object.totalDamage)
+	local InfinityEdge,onhitdmg,onhittdmg,onhitspelldmg,onhitspelltdmg,muramanadmg,skilldamage,skillTypeDmg = 0,0,0,0,0,0,0,0
+
+	if object.type ~= "AIHeroClient" then
+		if spell.name:find("BasicAttack") then skilldamage = adamage
+		elseif spell.name:find("CritAttack") then skilldamage = adamage*2 end
+	else
+		if GetInventoryHaveItem(3186,object) then onhitdmg = getDmg("KITAES",target,object) end
+		if GetInventoryHaveItem(3114,object) then onhitdmg = onhitdmg+getDmg("MALADY",target,object) end
+		if GetInventoryHaveItem(3091,object) then onhitdmg = onhitdmg+getDmg("WITSEND",target,object) end
+		if GetInventoryHaveItem(3057,object) then onhitdmg = onhitdmg+getDmg("SHEEN",target,object) end
+		if GetInventoryHaveItem(3078,object) then onhitdmg = onhitdmg+getDmg("TRINITY",target,object) end
+		if GetInventoryHaveItem(3100,object) then onhitdmg = onhitdmg+getDmg("LICHBANE",target,object) end
+		if GetInventoryHaveItem(3025,object) then onhitdmg = onhitdmg+getDmg("ICEBORN",target,object) end
+		if GetInventoryHaveItem(3087,object) then onhitdmg = onhitdmg+getDmg("STATIKK",target,object) end
+		if GetInventoryHaveItem(3153,object) then onhitdmg = onhitdmg+getDmg("RUINEDKING",target,object) end
+		if GetInventoryHaveItem(3209,object) then onhittdmg = getDmg("SPIRITLIZARD",target,object) end
+		if GetInventoryHaveItem(3184,object) then onhittdmg = onhittdmg+80 end
+		if GetInventoryHaveItem(3042,object) then muramanadmg = getDmg("MURAMANA",target,object) end
+		if spelltype == "BAttack" then
+			skilldamage = (adamage+onhitdmg+muramanadmg)*1.07+onhittdmg
+		elseif spelltype == "CAttack" then
+     -- print("baas")
+			if GetInventoryHaveItem(3031,object) then InfinityEdge = .5 end
+			skilldamage = (adamage*(2.1+InfinityEdge)+onhitdmg+muramanadmg)*1.07+onhittdmg --fix Lethality
+		elseif spelltype == "Q" or spelltype == "W" or spelltype == "E" or spelltype == "R" or spelltype == "P" or spelltype == "QM" or spelltype == "WM" or spelltype == "EM" then
+			if GetInventoryHaveItem(3151,object) then onhitspelldmg = getDmg("LIANDRYS",target,object) end
+			if GetInventoryHaveItem(3188,object) then onhitspelldmg = getDmg("BLACKFIRE",target,object) end
+			if GetInventoryHaveItem(3209,object) then onhitspelltdmg = getDmg("SPIRITLIZARD",target,object) end
+			muramanadmg = skillShield[object.charName][spelltype]["Muramana"] and muramanadmg or 0
+			if casttype == 1 then
+				skilldamage, skillTypeDmg = getDmg(spelltype,target,object,1,spell.level)
+			elseif casttype == 2 then
+				skilldamage, skillTypeDmg = getDmg(spelltype,target,object,2,spell.level)
+			elseif casttype == 3 then
+				skilldamage, skillTypeDmg = getDmg(spelltype,target,object,3,spell.level)
+			end
+			if skillTypeDmg == 2 then
+				skilldamage = (skilldamage+adamage+onhitspelldmg+onhitdmg+muramanadmg)*1.07+onhittdmg+onhitspelltdmg
+			else
+				if skilldamage > 0 then skilldamage = (skilldamage+onhitspelldmg+muramanadmg)*1.07+onhitspelltdmg end
+			end
+     -- print("dwaas")
+		elseif spell.name:find("SummonerDot") then
+			skilldamage = getDmg("IGNITE",target,object)
+		end
 	end
-	tigerQ = baseDamageQ + myHero.damage*0.75 + myHero.ap * 0.36
-end
-if skills.tigerW.cooldown <= GetGameTimer() then
-	if skills.tigerW.level <= 4 then baseDamageW = skills.tigerW.level*50
-	else baseDamageW = 4*50
+	local dmgpercent = skilldamage*100/target.health -- tjaa puntje
+	local dmgneeded = dmgpercent >= Menu.Shield.mindmgpercent
+	local hpneeded = Menu.Shield.maxhppercent >= (target.health-skilldamage)*100/target.maxHealth
+	
+	if dmgneeded and hpneeded then
+		shieldflag = true
+	elseif (typeused == "shields" or typeused == "wall") and ((CC == 2 and Menu.Shield.shieldcc) or (CC == 1 and Menu.Shield.shieldslow)) then
+		shieldflag = true
 	end
-	tigerW = baseDamageW + myHero.ap * 0.3
+	return shieldflag, dmgpercent
 end
-if skills.tigerE.cooldown <= GetGameTimer() then
-	if skills.tigerE.level <= 4 then baseDamageE = skills.tigerE.level*60 + 10
-	else baseDamageE = 4*60 + 10
-	end
-	tigerE = baseDamageE + myHero.ap * 0.45
 end
-if tigerQ > 0 then
-tigerQ = myHero:CalcMagicDamage(target,tigerQ)
-end
-if tigerW > 0 then
-tigerW = myHero:CalcMagicDamage(target,tigerW)
-end
-if tigerE > 0 then
-tigerE = myHero:CalcMagicDamage(target,tigerE)
-end
-totalDamage = tigerQ+tigerW+tigerE
-  
-return totalDamage
-end
-function NidaleeCanHitW(target)
-if GetDistance(target) >= skills.tigerW.range-skills.tigerW.radius-GetDistance(myHero.minBBox) then return true end
-return false
-end
-
-local go = false
-
-function brain()
-  local Auww = myHero.maxHealth / 100 
-  local Auw = Auww * 0.7
-  if target and target.type == myHero.type and target.team ~= myHero.team and not target.dead then
-    if skills.humanQ.ready and not Qhit and isTiger then
-      go = true
-  
-    elseif skills.tigerQ.ready and skills.tigerW.ready and skills.tigerE.ready and not isTiger and Qhit then
-      go = true
     
-    elseif myHero.health <= Auw and isTiger then 
-      go = true
-     -- print("foutje")
-    elseif isTiger and not skills.tigerW.ready and not skills.tigerE.ready and not skills.tigerQ.ready and skills.humanQ.ready and not Qhit then
-      go = true
     
-    elseif not isTiger and skills.tigerW.ready and skills.tigerE.ready and skills.tigerQ.ready and not isTiger and Qhit and ValidTarget(target, 750) then
-      go = true
-   
-    else
-       go = false
-     end
-   
-  end
-  return go
-  end
-    
-function TransForm(packet)
-  
-if packet then
-	Packet("S_CAST",{spellId = _R}):send()
-else
-    CastSpell(_R)
-end
-end
-
-function KS()
-  if target and target.team ~= myHero.team and target.type == myHero.type and not target.dead then
-     for i=1, heroManager.iCount do
-    local enemy = heroManager:GetHero(i)
-    if ValidTarget(enemy) and enemy ~= nil then
-      qDmg = getDmg("Q", enemy,myHero)
-      wDmg = getDmg("W", enemy,myHero)
-      eDmg = getDmg("E", enemy,myHero)
-      rDmg = getDmg("R", enemy,myHero)
-      dfgDmg = getDmg("DFG", enemy, myHero)
-
-    if isTiger then
-      if ValidTarget(target, skills.humanQ.range) then 
-				dmgQ = getDmg("Q", target, myHero) 
-				dmgQ2 = (dmgQ * (0.012 * (GetDistance(target) * 0.166667)))
-       -- print(dmgQ2)
-				if ValidTarget(target) and target.health <= dmgQ2 * 0.95 then
-          TransForm()
-        end
-        end
-      
-      if skills.tigerQ.ready and skills.tigerW.ready and skills.tigerE.ready and JumpRange() >= 0 then 
-        if target.health <= Calcu(target) and target.valid then
-          if skills.tigerW.ready and ValidTarget(target, JumpRange()) then
-            CastSpell(_W, target.x, target.z)
-          end
-          if skills.tigerQ.ready and ValidTarget(target, skills.tigerQ.range) then
-            CastSpell(_Q, myHero)
-          end
-          if skills.tigerE.ready and ValidTarget(target, skills.tigerE.range) then
-            CastSpell(_E, target)
-          end
-        end
-      end
-    elseif not isTiger then
-      
-			if ValidTarget(target, skills.humanQ.range) then 
-				dmgQ = getDmg("Q", target, myHero) 
-				dmgQ2 = (dmgQ * (0.012 * (GetDistance(target) * 0.166667)))
-       -- print(dmgQ2)
-				if ValidTarget(target) and target.health <= dmgQ2 * 0.95 then
-    --  print("yes")
-      if  Menu.ProdSettings.SelectProdiction == 2 then
-    --  print("check3")
-      if ValidTarget(target, skills.humanQ.range) and skills.humanQ.ready then
-			local CastPosition, HitChance, Position = VP:GetLineCastPosition(target, skills.humanQ.delay, skills.humanQ.range, skills.humanQ.speed,skills.humanQ.width, myHero, true)
-      --print("check 2")
-            if HitChance >= 2 then
-             -- print("check1")
-				CastSpell(_Q, CastPosition.x, CastPosition.z)
-       -- print("301")
-            end
-    end
-  elseif Menu.ProdSettings.SelectProdiction == 1 then
-    if Menu.NidaleeCombo.qSet.useQ and ValidTarget(target, skills.humanQ.range) and skills.humanQ.range then
-      DevineQ()
-    end
-  elseif Menu.ProdSettings.SelectProdiction == 3 then
-    if Menu.NidaleeCombo.qSet.useQ and ValidTarget(target, skills.humanQ.range) and skills.humanQ.range  then 
-      CastQ()
-     -- print("KSQ")
-    end
-  end
-  end
-    end
-  end
-  end
-end
-end
-end
-
-function spQ()
-  if target ~= nil and target.team ~= myHero.team and target.type == myHero.type then
-CastPosition, HitChance = SP:Predict(_Q, myHero, target)
-					if CastPosition and HitChance >= 2 then
-						CastSpell(_Q, CastPosition.x, CastPosition.z)
-          end
-        end
-        end
-
-
-
-
