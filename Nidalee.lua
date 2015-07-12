@@ -1,6 +1,6 @@
 if myHero.charName ~= "Nidalee" or not VIP_USER then return end
 
-local version = 0.4
+local version = 0.3
 local AUTOUPDATE = true
 local SCRIPT_NAME = "SXNidalee"
 require 'VPrediction'
@@ -783,22 +783,14 @@ function LaneClear()
 end
 
 function JungleClear()
- -- print("stap1")
 	for i, jungleMinion in pairs(jungleMinions.objects) do
-  --   print("stap2")
 		if jungleMinion ~= nil then
-    --   print("stap3")
-   SxOrb:Attack(jungleMinion)
       if not isTiger then
-        if not skills.humanQ.ready and not skills.humanW.ready then
-          TransForm()
-        end
 			if Menu.Jungleclear.useClearQ and skills.humanQ.ready and ValidTarget(jungleMinion, skills.humanQ.range) then
-       -- print("_q")
 				CastSpell(_Q, jungleMinion.x, jungleMinion.z)
 			end
 			if Menu.Jungleclear.useClearW and skills.humanW.ready and ValidTarget(jungleMinion, skills.humanW.range) then
-				CastSpell(_W, jungleMinion.x, jungleMinion.z)
+				CastSpell(_W, jungleMinion.x,jungleMinion.z)
 			end
 			if Menu.Jungleclear.useClearE and skills.humanE.ready and ValidTarget(jungleMinion, skills.humanE.range) then
 				CastSpell(_E, myHero)
@@ -807,19 +799,14 @@ function JungleClear()
         TransForm()
       end
     elseif isTiger then
-     if skills.humanQ.ready then
-          CastSpell(_R, myHero)
-        end
-      --print(Menu.Jungleclear.useClearQ )
       if Menu.Jungleclear.useClearQ and skills.tigerQ.ready and ValidTarget(jungleMinion, skills.tigerQ.range) then
-       -- print("_q")
-				CastSpell(_Q, jungleMinion)
+				CastSpell(_Q, jungleMinione)
 			end
 			if Menu.Jungleclear.useClearW and skills.tigerW.ready and ValidTarget(jungleMinion, skills.tigerW.range) then
-				CastSpell(_W, jungleMinion.x, jungleMinion.z)
+				CastSpell(_W, jungleMinion.x,jungleMinion.z)
 			end
 			if Menu.Jungleclear.useClearE and skills.tigerE.ready and ValidTarget(jungleMinion, skills.tigerE.range) then
-				CastSpell(_E, jungleMinion)
+				CastSpell(_E, targetMinion)
 			end
       end
 		end
@@ -1189,7 +1176,7 @@ function CastQ()
   local QPos, QHitchance = HPred:GetPredict(Nidalee_Q, target, myHero)
   --print(QHitchance)
   --print("CAstQ@")
- -- print(QHitchance)
+  print(QHitchance)
   if QHitchance >= Menu.HP.HPCS and ValidTarget(target, 1200) then
     --print("short")
   --print("laastecheck")
@@ -1490,6 +1477,7 @@ CastPosition, HitChance = SP:Predict(_Q, myHero, target)
           end
         end
         end
+
 
 
 
