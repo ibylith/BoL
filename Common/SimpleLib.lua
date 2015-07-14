@@ -1,6 +1,6 @@
 local AUTOUPDATES = true
 local ScriptName = "SimpleLib"
-_G.SimpleLibVersion = 0.64
+_G.SimpleLibVersion = 0.66
 
 SPELL_TYPE = {LINEAR = 1, CIRCULAR = 2, CONE = 3, TARGETTED = 4, SELF = 5}
 
@@ -27,6 +27,7 @@ class "_Evader"
 class "_AutoSmite"
 
 local CHANELLING_SPELLS = {
+    ["Caitlyn"]                     = "R",
     ["Katarina"]                    = "R",
     ["MasterYi"]                    = "W",
     ["Fiddlesticks"]                = "R",
@@ -40,6 +41,7 @@ local CHANELLING_SPELLS = {
     ["Malzahar"]                    = "R",
     ["Pantheon"]                    = "R",
     ["Warwick"]                     = "R",
+    ["Xerath"]                      = "R",
 }
 
 local GAPCLOSER_SPELLS = {
@@ -2243,7 +2245,7 @@ function _Evader:__init(menu)
                                         table.insert(self.ActiveSpells, {Time = os.clock() - GetLatency() / 2000, Unit = unit, Spell = spell, SpellType = spelltype})
                                         self:CheckHitChampion(unit, spell, spelltype)
                                     end, 
-                                spell.windUpTime /2)
+                                spell.windUpTime * 1 / 4 - 2 * GetLatency() / 2000)
                             end
                         end
                     end
@@ -2273,7 +2275,7 @@ function _Evader:__init(menu)
 end
 
 function _Evader:CheckHitChampion(unit, spell, spelltype, champion)
-    if unit and spell and spelltype and ValidTarget(unit, math.huge, unit.team ~= myHero.team) then
+    if unit and spell and spelltype and unit.valid then
         local hitchampion = false
         local champion = champion ~= nil and champion or myHero
         if skillData[unit.charName] ~= nil and skillData[unit.charName][spelltype] ~= nil then
@@ -3090,6 +3092,7 @@ if _G.SimpleLibLoaded == nil then
     r:Check()
     if r:IsDownloading() then return end
     DelayAction(function() CheckUpdate() end, 5)
+    TargetSelector(TARGET_LESS_CAST_PRIORITY, 0)
     DelayAction(function() _arrangePriorities() end, 12)
     OrbwalkManager = _OrbwalkManager()
     Prediction = _Prediction()

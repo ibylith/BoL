@@ -16,7 +16,7 @@
 assert(load(Base64Decode("G0x1YVIAAQQEBAgAGZMNChoKAAAAAAAAAAAAAQIKAAAABgBAAEFAAAAdQAABBkBAAGUAAAAKQACBBkBAAGVAAAAKQICBHwCAAAQAAAAEBgAAAGNsYXNzAAQNAAAAU2NyaXB0U3RhdHVzAAQHAAAAX19pbml0AAQLAAAAU2VuZFVwZGF0ZQACAAAAAgAAAAgAAAACAAotAAAAhkBAAMaAQAAGwUAABwFBAkFBAQAdgQABRsFAAEcBwQKBgQEAXYEAAYbBQACHAUEDwcEBAJ2BAAHGwUAAxwHBAwECAgDdgQABBsJAAAcCQQRBQgIAHYIAARYBAgLdAAABnYAAAAqAAIAKQACFhgBDAMHAAgCdgAABCoCAhQqAw4aGAEQAx8BCAMfAwwHdAIAAnYAAAAqAgIeMQEQAAYEEAJ1AgAGGwEQA5QAAAJ1AAAEfAIAAFAAAAAQFAAAAaHdpZAAEDQAAAEJhc2U2NEVuY29kZQAECQAAAHRvc3RyaW5nAAQDAAAAb3MABAcAAABnZXRlbnYABBUAAABQUk9DRVNTT1JfSURFTlRJRklFUgAECQAAAFVTRVJOQU1FAAQNAAAAQ09NUFVURVJOQU1FAAQQAAAAUFJPQ0VTU09SX0xFVkVMAAQTAAAAUFJPQ0VTU09SX1JFVklTSU9OAAQEAAAAS2V5AAQHAAAAc29ja2V0AAQIAAAAcmVxdWlyZQAECgAAAGdhbWVTdGF0ZQAABAQAAAB0Y3AABAcAAABhc3NlcnQABAsAAABTZW5kVXBkYXRlAAMAAAAAAADwPwQUAAAAQWRkQnVnc3BsYXRDYWxsYmFjawABAAAACAAAAAgAAAAAAAMFAAAABQAAAAwAQACBQAAAHUCAAR8AgAACAAAABAsAAABTZW5kVXBkYXRlAAMAAAAAAAAAQAAAAAABAAAAAQAQAAAAQG9iZnVzY2F0ZWQubHVhAAUAAAAIAAAACAAAAAgAAAAIAAAACAAAAAAAAAABAAAABQAAAHNlbGYAAQAAAAAAEAAAAEBvYmZ1c2NhdGVkLmx1YQAtAAAAAwAAAAMAAAAEAAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAABAAAAAUAAAAFAAAABQAAAAUAAAAFAAAABQAAAAUAAAAFAAAABgAAAAYAAAAGAAAABgAAAAUAAAADAAAAAwAAAAYAAAAGAAAABgAAAAYAAAAGAAAABgAAAAYAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAIAAAACAAAAAgAAAAIAAAAAgAAAAUAAABzZWxmAAAAAAAtAAAAAgAAAGEAAAAAAC0AAAABAAAABQAAAF9FTlYACQAAAA4AAAACAA0XAAAAhwBAAIxAQAEBgQAAQcEAAJ1AAAKHAEAAjABBAQFBAQBHgUEAgcEBAMcBQgABwgEAQAKAAIHCAQDGQkIAx4LCBQHDAgAWAQMCnUCAAYcAQACMAEMBnUAAAR8AgAANAAAABAQAAAB0Y3AABAgAAABjb25uZWN0AAQRAAAAc2NyaXB0c3RhdHVzLm5ldAADAAAAAAAAVEAEBQAAAHNlbmQABAsAAABHRVQgL3N5bmMtAAQEAAAAS2V5AAQCAAAALQAEBQAAAGh3aWQABAcAAABteUhlcm8ABAkAAABjaGFyTmFtZQAEJgAAACBIVFRQLzEuMA0KSG9zdDogc2NyaXB0c3RhdHVzLm5ldA0KDQoABAYAAABjbG9zZQAAAAAAAQAAAAAAEAAAAEBvYmZ1c2NhdGVkLmx1YQAXAAAACgAAAAoAAAAKAAAACgAAAAoAAAALAAAACwAAAAsAAAALAAAADAAAAAwAAAANAAAADQAAAA0AAAAOAAAADgAAAA4AAAAOAAAACwAAAA4AAAAOAAAADgAAAA4AAAACAAAABQAAAHNlbGYAAAAAABcAAAACAAAAYQAAAAAAFwAAAAEAAAAFAAAAX0VOVgABAAAAAQAQAAAAQG9iZnVzY2F0ZWQubHVhAAoAAAABAAAAAQAAAAEAAAACAAAACAAAAAIAAAAJAAAADgAAAAkAAAAOAAAAAAAAAAEAAAAFAAAAX0VOVgA="), nil, "bt", _ENV))() ScriptStatus("TGJIHINHFFL") 
 --Scriptstatus Tracker
 
-_G.ScriptologyVersion    = 1.99997
+_G.ScriptologyVersion    = 1.999993
 _G.ScriptologyAutoUpdate = true
 _G.ScriptologyLoaded     = false
 _G.ScriptologyDebug      = false
@@ -414,6 +414,19 @@ _G.ScriptologyDebug      = false
           [_R] = { }
         }
     }
+    gapcloserTable = {
+      ["Aatrox"] = _E, ["Akali"] = _R, ["Alistar"] = _W, ["Ahri"] = _R, ["Amumu"] = _Q, ["Corki"] = _W,
+      ["Diana"] = _R, ["Elise"] = _Q, ["Elise"] = _E, ["Fiddlesticks"] = _R, ["Fiora"] = _Q,
+      ["Fizz"] = _Q, ["Gnar"] = _E, ["Grags"] = _E, ["Graves"] = _E, ["Hecarim"] = _R,
+      ["Irelia"] = _Q, ["JarvanIV"] = _Q, ["Jax"] = _Q, ["Jayce"] = "JayceToTheSkies", ["Katarina"] = _E, 
+      ["Kassadin"] = _R, ["Kennen"] = _E, ["KhaZix"] = _E, ["Lissandra"] = _E, ["LeBlanc"] = _W, 
+      ["LeeSin"] = "blindmonkqtwo", ["Leona"] = _E, ["Lucian"] = _E, ["Malphite"] = _R, ["MasterYi"] = _Q, 
+      ["MonkeyKing"] = _E, ["Nautilus"] = _Q, ["Nocturne"] = _R, ["Olaf"] = _R, ["Pantheon"] = _W, 
+      ["Poppy"] = _E, ["RekSai"] = _E, ["Renekton"] = _E, ["Riven"] = _Q, ["Sejuani"] = _Q, 
+      ["Sion"] = _R, ["Shen"] = _E, ["Shyvana"] = _R, ["Talon"] = _E, ["Thresh"] = _Q, 
+      ["Tristana"] = _W, ["Tryndamere"] = "Slash", ["Udyr"] = _E, ["Volibear"] = _Q, ["Vi"] = _Q, 
+      ["XinZhao"] = _E, ["Yasuo"] = _E, ["Zac"] = _E, ["Ziggs"] = _W
+    }
     lastAttack = 0
     lastWindup = 0
     previousWindUp = 0
@@ -506,9 +519,11 @@ _G.ScriptologyDebug      = false
   end
 
   function SetupEvade()
-    if _G.Evadeee_Loaded == nil and _G.Evade == nil then
-      loadedEvade = SEvade()
-    end
+    DelayAction(function()
+      if _G.Evadeee_Loaded == nil and _G.Evade == nil and _G.Evading == nil and _G.evade == nil and _G.evading == nil then
+        loadedEvade = SEvade()
+      end
+    end, 3)
   end
 
   function SetupOrbwalk()
@@ -1061,6 +1076,44 @@ _G.ScriptologyDebug      = false
     end
   end
 
+  function AddGapcloseCallback(spell, range, targeted, config)
+    GapcloseSpell = spell
+    GapcloseTime = 0
+    GapcloseUnit = nil
+    GapcloseTargeted = targeted
+    GapcloseRange = range
+    str = {[_Q] = "Q", [_W] = "W", [_E] = "E", [_R] = "R"}
+    config:addDynamicParam("antigap", "Auto "..str[spell].." on gapclose", SCRIPT_PARAM_ONOFF, true)
+    for _,k in pairs(GetEnemyHeroes()) do
+      if gapcloserTable[k.charName] then
+        config:addParam(k.charName, "Use "..str[spell].." on "..k.charName.." "..(type(gapcloserTable[k.charName]) == 'number' and str[gapcloserTable[k.charName]] or (k.charName == "LeeSin" and "Q" or "E")), SCRIPT_PARAM_ONOFF, true)
+      end
+    end
+    AddProcessSpellCallback(function(unit, spell)
+      if not config.antigap or not gapcloserTable[unit.charName] or not config[unit.charName] or not unit then return end
+      if spell.name == (type(gapcloserTable[unit.charName]) == 'number' and unit:GetSpellData(gapcloserTable[unit.charName]).name or gapcloserTable[unit.charName]) and (spell.target == myHero or GetDistanceSqr(spell.endPos) < GapcloseRange*GapcloseRange*4) then
+        GapcloseTime = GetInGameTimer() + 2
+        GapcloseUnit = unit
+      end
+    end)
+    AddTickCallback(function()
+      if sReady[GapcloseSpell] and GapcloseTime and GapcloseUnit and GapcloseTime > GetInGameTimer() then
+        if GapcloseTargeted then
+          if GetDistanceSqr(GapcloseUnit,myHero) < GapcloseRange*GapcloseRange then
+            Cast(GapcloseSpell, GapcloseUnit, true)
+          end
+        else 
+          if GetDistanceSqr(GapcloseUnit,myHero) < GapcloseRange*GapcloseRange*4 then
+            Cast(GapcloseSpell, GapcloseUnit, false, true, 1)
+          end
+        end
+      else
+        GapcloseTime = 0
+        GapcloseUnit = nil
+      end
+    end)
+  end
+
   function DrawLFC(x, y, z, radius, color)
       if Config.Draws.LFC then
           LagFree(x, y, z, radius, 1, color, 32, 0)
@@ -1351,6 +1404,8 @@ _G.ScriptologyDebug      = false
     for i=1,heroManager.iCount do hero = heroManager:GetHero(i) if hero.team == myHero.team and hero.x and hero.y and hero.z and GetDistance(hero, Unit) < range then c=c+1 end end return c
   end
 
+  _G.c3il = function(x) return math.ceil(x) end
+
   function GetLowestMinion(range)
     local minionTarget = nil
     for i, minion in pairs(minionManager(MINION_ENEMY, range, myHero, MINION_SORT_HEALTH_ASC).objects) do
@@ -1548,8 +1603,7 @@ class "SEvade"
       end
     end
     self.Config:addParam("d", "Draw", SCRIPT_PARAM_ONOFF, true)
-    self.Config:addParam("drawfps", "Draw adjust (more = less lagg)", SCRIPT_PARAM_SLICE, 0, 0, 0.01, 3)
-    self.Config:addParam("e", "Evade", SCRIPT_PARAM_ONOFF, true)
+    self.Config:addParam("e", "Evade", SCRIPT_PARAM_ONOFF, false)
     self.Config:addDynamicParam("se", "Stop Evade", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("N"))
     self.Config:addParam("ew", "Extrawidth", SCRIPT_PARAM_SLICE, 20, 0, 100, 0)
     self.Config:addParam("er", "Extrarange", SCRIPT_PARAM_SLICE, 20, 0, 100, 0)
@@ -1668,8 +1722,6 @@ class "SEvade"
   end
 
   function SEvade:Draw()
-    if not self.Config.d or not self.Config.drawfps or self.lastDrawn+self.Config.drawfps > os.clock() then return end
-    self.lastDrawn = os.clock()
     if _G.Evade and self.m then
       DrawCircle3D(self.m.x, self.m.y, self.m.z, myHero.boundingRadius, 2, ARGB(255, 255, 255, 255), 32)
     end
@@ -1800,7 +1852,7 @@ class "SWalk"
     -- CastSpell(s, x, z) <- mouse
       self.aaResetTable4 = a4
     self.State = {}
-    self.orbTable = { lastAA = 0, windUp = 4, animation = 0.5 }
+    self.orbTable = { lastAA = 0, windUp = 1, animation = 0.5 }
     self.myRange = myHero.range+myHero.boundingRadius
     if Cfg then
       Cfg:addSubMenu("SWalk", "SWalk")
@@ -2295,6 +2347,7 @@ class "Ahri"
     Config.kConfig:addDynamicParam("Harrass", "Harrass", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
     Config.kConfig:addDynamicParam("LastHit", "Last hit", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("X"))
     Config.kConfig:addDynamicParam("LaneClear", "Lane Clear", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("V"))
+    AddGapcloseCallback(_E, data[2].range, false, Config.Misc)
   end
 
   function Ahri:ProcessSpell(unit, spell)
@@ -2892,6 +2945,7 @@ class "Blitzcrank"
     Config.kConfig:addDynamicParam("Combo", "Combo", SCRIPT_PARAM_ONKEYDOWN, false, 32)
     Config.kConfig:addDynamicParam("Harrass", "Harrass", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
     if Smite ~= nil then Config.Misc:addParam("S", "Smitegrab", SCRIPT_PARAM_ONOFF, true) end
+    AddGapcloseCallback(_Q, data[0].range, false, Config.Misc)
   end
 
   function Blitzcrank:GetBestTarget(Range)
@@ -2935,20 +2989,13 @@ class "Blitzcrank"
       local CastPosition,  HitChance, HeroPosition = UPL:Predict(_Q, myHero, target)
       if HitChance > 1.2 and GetDistance(CastPosition) <= data[0].range  then
         local Mcol, mcol = self.Col:GetMinionCollision(myHero, CastPosition)
-        local Mcol2, mcol2 = self.Col:GetMinionCollision(myHero, target)
         if not Mcol and not Mcol2 then
           CastSpell(_Q, CastPosition.x,  CastPosition.z)
-        elseif Smite and Config.Misc.S and mcol+mcol2 == 1 and myHero:CanUseSpell(Smite) == READY then
-          local minion = nil
-          for _,k in pairs(Mobs.objects) do
-            if not minion and k and GetDistanceSqr(k) < data[2].range*data[2].range then minion = k end
-            if minion and k and GetDistanceSqr(k,myHero)+GetDistanceSqr(k,CastPosition) < GetDistanceSqr(minion,myHero)+GetDistanceSqr(minion,CastPosition) and GetDistanceSqr(k) < data[2].range*data[2].range then
-              minion = k
-            end
-          end
-          if minion then
+        elseif Smite and myHero:CanUseSpell(Smite) == READY and Config.Misc.S and Mcol and #mcol == 1 then
+          local minion = mcol[1]
+          if minion and GetDistance(minion) < 600 then
             CastSpell(_Q, CastPosition.x,  CastPosition.z)
-            DelayAction(function() CastSpell(Smite, minion) end, GetDistance(minion) / data[_Q].speed + data[_Q].delay)
+            DelayAction(function() CastSpell(Smite, minion) end, (GetDistance(minion) / 2) / data[_Q].speed + data[_Q].delay)
           end
         end
       end
@@ -4023,12 +4070,13 @@ class "Kalista"
   end
 
   function Kalista:ProcessSpell(unit, spell)
-    if not unit or not spell or GetDistance(unit) > 1000 then return end
-    if spell.name == "KalistaPSpellCast" then 
+    if not unit or not spell then return end
+    if spell.name == "KalistaPSpellCast" and GetDistance then 
       self.soulMate = spell.target
       Config.Misc:modifyParam("R", "text", "Save ally with R ("..self.soulMate.charName..")")
       ScriptologyMsg("Soulmate found: "..spell.target.charName)
     end
+    if not self.soulMate or unit.type ~= myHero.type then return end
     if Config.Misc.R and self.saveAlly and unit.team ~= self.soulMate.team and (self.soulMate == spell.target or GetDistance(spell.endPos,self.soulMate) < self.soulMate.boundingRadius*3) then
       Cast(_R)
       ScriptologyMsg("Saving soulmate from spell: "..spell.name)
@@ -4081,13 +4129,13 @@ class "Kalista"
       local killableCounterJ = 0
       for minion,winion in pairs(Mobs.objects) do
         local EMinionDmg = GetDmg(_E, myHero, winion)  
-        if winion ~= nil and EMinionDmg > winion.health and GetDistance(winion) < data[2].range then    
+        if winion ~= nil and EMinionDmg > winion.health+winion.shield and GetDistance(winion) < data[2].range then    
           killableCounter = killableCounter + 1
         end
       end
       for minion,winion in pairs(JMobs.objects) do
         local EMinionDmg = GetDmg(_E, myHero, winion)  
-        if winion ~= nil and EMinionDmg > winion.health and GetDistance(winion) < data[2].range then
+        if winion ~= nil and EMinionDmg > winion.health+winion.shield and GetDistance(winion) < data[2].range then
           if (string.find(winion.charName, "Crab") or string.find(winion.charName, "Rift") or string.find(winion.charName, "Baron") or string.find(winion.charName, "Dragon") or string.find(winion.charName, "Gromp") or ((string.find(winion.charName, "Krug") or string.find(winion.charName, "Murkwolf") or string.find(winion.charName, "Razorbeak") or string.find(winion.charName, "Red") or string.find(winion.charName, "Blue")))) then
             if not string.find(winion.charName, "Mini") then       
               killableCounterJ = killableCounterJ + 1
@@ -4125,7 +4173,7 @@ class "Kalista"
     if myHero:CanUseSpell(_Q) == READY and ((Config.kConfig.LastHit and Config.LastHit.Q and Config.LastHit.manaQ <= 100*myHero.mana/myHero.maxMana) or (Config.kConfig.LaneClear and Config.LaneClear.Q and Config.LaneClear.manaQ <= 100*myHero.mana/myHero.maxMana)) then
       for minion,winion in pairs(Mobs.objects) do
         local MinionDmg = GetDmg(_Q, myHero, winion)
-        if MinionDmg and MinionDmg >= winion.health and ValidTarget(winion, data[0].range) and GetDistance(winion) < data[0].range then
+        if MinionDmg and MinionDmg >= winion.health+winion.shield and ValidTarget(winion, data[0].range) and GetDistance(winion) < data[0].range then
           Cast(_Q, winion, false, true, 1.2)
         end
       end
@@ -4141,13 +4189,13 @@ class "Kalista"
       Cast(_Q, Target, false, true, 1.5)
     end
     if myHero:CanUseSpell(_E) == READY and Config.Combo.E and ValidTarget(Target, data[2].range) then
-      if GetDmg(_E, myHero, Target) >= Target.health then
+      if GetDmg(_E, myHero, Target) >= Target.health+Target.shield then
         Cast(_E)
       end
       local killableCounter = 0
       for minion,winion in pairs(Mobs.objects) do
         local EMinionDmg = GetDmg(_E, myHero, winion)      
-        if winion ~= nil and EMinionDmg and EMinionDmg >= winion.health and ValidTarget(winion, data[2].range) and GetDistance(winion) < data[2].range then
+        if winion ~= nil and EMinionDmg and EMinionDmg >= winion.health+winion.shield and ValidTarget(winion, data[2].range) and GetDistance(winion) < data[2].range then
           killableCounter = killableCounter +1
         end   
       end   
@@ -4173,7 +4221,7 @@ class "Kalista"
       local killableCounter = 0
       for minion,winion in pairs(Mobs.objects) do
         local EMinionDmg = GetDmg(_E, myHero, winion)      
-        if winion ~= nil and EMinionDmg and EMinionDmg >= winion.health and ValidTarget(winion, data[2].range) and GetDistance(winion) < data[2].range then
+        if winion ~= nil and EMinionDmg and EMinionDmg >= winion.health+winion.shield and ValidTarget(winion, data[2].range) and GetDistance(winion) < data[2].range then
           killableCounter = killableCounter +1
         end   
       end 
@@ -4199,11 +4247,11 @@ class "Kalista"
   function Kalista:Killsteal()
     for k,enemy in pairs(GetEnemyHeroes()) do
       if ValidTarget(enemy) and enemy ~= nil and not enemy.dead then
-        if myHero:CanUseSpell(_E) == READY and enemy.health < GetDmg(_E, myHero, enemy) and Config.Killsteal.E and ValidTarget(enemy, data[2].range) then
+        if myHero:CanUseSpell(_E) == READY and enemy.health+enemy.shield < GetDmg(_E, myHero, enemy) and Config.Killsteal.E and ValidTarget(enemy, data[2].range) then
           Cast(_E)
-        elseif myHero:CanUseSpell(_Q) == READY and enemy.health < GetDmg(_Q, myHero, enemy) and Config.Killsteal.Q and ValidTarget(enemy, data[0].range) then
+        elseif myHero:CanUseSpell(_Q) == READY and enemy.health+enemy.shield < GetDmg(_Q, myHero, enemy) and Config.Killsteal.Q and ValidTarget(enemy, data[0].range) then
           Cast(_Q, enemy, false, true, 1.2)
-        elseif Ignite and myHero:CanUseSpell(Ignite) == READY and enemy.health < (50 + 20 * myHero.level) / 5 and Config.Killsteal.I and ValidTarget(enemy, 600) then
+        elseif Ignite and myHero:CanUseSpell(Ignite) == READY and enemy.health+enemy.shield < (50 + 20 * myHero.level) / 5 and Config.Killsteal.I and ValidTarget(enemy, 600) then
           CastSpell(Ignite, enemy)
         end
       end
@@ -4230,7 +4278,7 @@ class "Katarina"
     self.oldPos = nil
     for i = 1, objManager.maxObjects do
       local object = objManager:GetObject(i)
-      if object ~= nil and object.valid and string.find(string.lower(object.name), "ward") then
+      if object ~= nil and object.valid and (string.find(string.lower(object.name), "ward") or string.find(string.lower(object.name), "trinkettotem")) then
         table.insert(self.Wards, object)
       end
     end
@@ -4314,7 +4362,7 @@ class "Katarina"
 
   function Katarina:CreateObj(obj)
     if obj ~= nil and obj.valid then
-      if string.find(string.lower(obj.name), "ward") then
+      if string.find(string.lower(obj.name), "ward") or string.find(string.lower(obj.name), "trinkettotem") then
         table.insert(self.Wards, obj)
       end
     end
@@ -4328,7 +4376,17 @@ class "Katarina"
 
   function Katarina:GetWardSlot()
     for slot = ITEM_7, ITEM_1, -1 do
-      if myHero:GetSpellData(slot).name and myHero:CanUseSpell(slot) == READY and (string.find(string.lower(myHero:GetSpellData(slot).name), "ward") or string.find(string.lower(myHero:GetSpellData(slot).name), "trinkettotem")) then
+      if myHero:GetSpellData(slot).name and myHero:CanUseSpell(slot) == READY and string.find(string.lower(myHero:GetSpellData(slot).name), "trinkettotem") then
+        return slot
+      end
+    end
+    for slot = ITEM_7, ITEM_1, -1 do
+      if myHero:GetSpellData(slot).name and myHero:CanUseSpell(slot) == READY and (string.find(string.lower(myHero:GetSpellData(slot).name), "ward") and not string.find(string.lower(myHero:GetSpellData(slot).name), "vision")) then
+        return slot
+      end
+    end
+    for slot = ITEM_7, ITEM_1, -1 do
+      if myHero:GetSpellData(slot).name and myHero:CanUseSpell(slot) == READY and string.find(string.lower(myHero:GetSpellData(slot).name), "ward") then
         return slot
       end
     end
@@ -4614,7 +4672,7 @@ class "LeeSin"
     self.passiveName = "blindmonkpassive_cosmetic"
     for i = 1, objManager.maxObjects do
       local object = objManager:GetObject(i)
-      if object ~= nil and object.valid and string.find(string.lower(object.name), "ward") then
+      if object ~= nil and object.valid and (string.find(string.lower(object.name), "ward") or string.find(string.lower(object.name), "trinkettotem")) then
         table.insert(self.Wards, object)
       end
     end
@@ -4835,7 +4893,7 @@ class "LeeSin"
 
   function LeeSin:CreateObj(obj)
     if obj ~= nil and obj.valid then
-      if string.find(string.lower(obj.name), "ward") then
+      if string.find(string.lower(obj.name), "ward") or string.find(string.lower(obj.name), "trinkettotem") then
         table.insert(self.Wards, obj)
       end
     end
@@ -4849,7 +4907,17 @@ class "LeeSin"
 
   function LeeSin:GetWardSlot()
     for slot = ITEM_7, ITEM_1, -1 do
-      if myHero:GetSpellData(slot).name and myHero:CanUseSpell(slot) == READY and (string.find(string.lower(myHero:GetSpellData(slot).name), "ward") or string.find(string.lower(myHero:GetSpellData(slot).name), "trinkettotem")) then
+      if myHero:GetSpellData(slot).name and myHero:CanUseSpell(slot) == READY and string.find(string.lower(myHero:GetSpellData(slot).name), "trinkettotem") then
+        return slot
+      end
+    end
+    for slot = ITEM_7, ITEM_1, -1 do
+      if myHero:GetSpellData(slot).name and myHero:CanUseSpell(slot) == READY and (string.find(string.lower(myHero:GetSpellData(slot).name), "ward") and not string.find(string.lower(myHero:GetSpellData(slot).name), "vision")) then
+        return slot
+      end
+    end
+    for slot = ITEM_7, ITEM_1, -1 do
+      if myHero:GetSpellData(slot).name and myHero:CanUseSpell(slot) == READY and string.find(string.lower(myHero:GetSpellData(slot).name), "ward") then
         return slot
       end
     end
@@ -5041,6 +5109,7 @@ class "Lux"
     Config.Misc:addParam("Wa", "Shield with W (auto)", SCRIPT_PARAM_ONOFF, true)
     Config.Misc:addParam("manaW", "Min Mana % for shield", SCRIPT_PARAM_SLICE, 30, 0, 100, 0)
     Config.Misc:addParam("Ea", "Detonate E (auto)", SCRIPT_PARAM_ONOFF, true)
+    AddGapcloseCallback(_Q, data[0].range, false, Config.Misc)
   end
 
   function Lux:DetonateE()
@@ -5629,6 +5698,16 @@ class "Nidalee"
   end
 
   function Nidalee:LaneClear()
+    if self:IsHuman() then
+      if sReady[_Q] then
+        local minion = GetJMinion(self.data.Human[0].range)
+        if minion then
+          Cast(_Q, minion, false, true, 1)
+        end
+      else
+        Cast(_R)
+      end
+    end
     if not self:IsHuman() then
       if myHero:CanUseSpell(_Q) == READY and Config.LaneClear.Q then
         local minionTarget = GetLowestMinion(self:GetAARange())
@@ -5659,6 +5738,9 @@ class "Nidalee"
         if pos and hit > 0 then
           Cast(_E, pos)
         end
+      end
+      if not self:IsHuman() and not sReady[_Q] and not sReady[_E] and self.spearCooldownUntil < GetInGameTimer() then
+        Cast(_R)
       end
     end
   end
@@ -5939,7 +6021,6 @@ class "Orianna"
     if myHero:CanUseSpell(_R) ~= READY or unit == nil or myHero.dead then return end
     local Ball = objHolder["TheDoomBall"] or myHero
     local pos, b = PredictPos(unit, 0.5)
-    print(GetDistance(pos, Ball))
     if pos and GetDistance(pos, Ball) < data[3].width-b then 
       Cast(_R) 
     end  
@@ -6229,6 +6310,7 @@ class "Riven"
     Config.Misc:addParam("Wae", "Auto stun if X enemies", SCRIPT_PARAM_SLICE, 2, 1, 5, 0)
     Config.Misc:addDynamicParam("Flee", "Flee", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("T"))
     Config.Misc:addDynamicParam("Jump", "Jump", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("G"))
+    AddGapcloseCallback(_W, data[1].range, false, Config.Misc)
   end
 
   function Riven:Msg(Msg, Key)
@@ -6344,7 +6426,7 @@ class "Riven"
   end
 
   function Riven:RecvPacket(p)
-    if p.header == 0x2A and self.QCast == 3 and self.Target and p:DecodeF() == self.Target.networkdID and loadedOrb:DoOrb() then
+    if p.header == 0x2A and self.QCast == 3 and self.Target and p:DecodeF() == self.Target.networkID and loadedOrb:DoOrb() then
       self:CastDance()
       myHero:Attack(self.Target)
     end
@@ -6552,6 +6634,7 @@ class "Ryze"
     Config.kConfig:addDynamicParam("Harrass", "Harrass", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
     Config.kConfig:addDynamicParam("LastHit", "Last hit", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("X"))
     Config.kConfig:addDynamicParam("LaneClear", "Lane Clear", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("V"))
+    AddGapcloseCallback(_W, data[1].range, true, Config.Misc)
   end
 
   function Ryze:Msg(Msg, Key)
@@ -6624,16 +6707,17 @@ class "Ryze"
         if x2 and x2 >= 1 then CastSpell(_Q, x1.x, x1.z) end 
       end
       if self.passiveTracker >= 5 then 
-        if myHero:GetSpellData(_W).currentCd > 0 and myHero:GetSpellData(_E).currentCd > 0 and (myHero:GetSpellData(_R).level > 0 and myHero:GetSpellData(_R).currentCd > 0 or true) and Config.LaneClear.Q and Config.LaneClear.manaQ < myHero.mana/myHero.maxMana*100 then
+        if Config.LaneClear.Q and Config.LaneClear.manaQ < myHero.mana/myHero.maxMana*100 then
           local x1, x2, x3 = UPL.VP:GetLineCastPosition(target, 0.25, 55, 900, 1875, myHero, false) 
           if x2 and x2 >= 2 then CastSpell(_Q, x1.x, x1.z) end 
-        elseif myHero:GetSpellData(_Q).currentCd > 0 and myHero:GetSpellData(_W).currentCd > 0 and (myHero:GetSpellData(_R).level > 0 and myHero:GetSpellData(_R).currentCd > 0 or true) and Config.LaneClear.E and Config.LaneClear.manaE < myHero.mana/myHero.maxMana*100 then 
+        end
+        if myHero:CanUseSpell(_Q) == COOLDOWN and myHero:CanUseSpell(_W) == COOLDOWN and myHero:CanUseSpell(_R) == COOLDOWN and Config.LaneClear.E and Config.LaneClear.manaE < myHero.mana/myHero.maxMana*100 then 
           CastSpell(_E, target) 
-        elseif myHero:GetSpellData(_Q).currentCd > 0 and myHero:GetSpellData(_R).currentCd > 0 and Config.LaneClear.W and Config.LaneClear.manaW < myHero.mana/myHero.maxMana*100 then
+        elseif myHero:CanUseSpell(_Q) == COOLDOWN and myHero:CanUseSpell(_R) == COOLDOWN and Config.LaneClear.W and Config.LaneClear.manaW < myHero.mana/myHero.maxMana*100 then
           CastSpell(_W, target) 
-        elseif myHero:GetSpellData(_Q).currentCd > 0 and Config.LaneClear.R and Config.LaneClear.manaR < myHero.mana/myHero.maxMana*100 then
+        elseif myHero:CanUseSpell(_Q) == COOLDOWN and Config.LaneClear.R and Config.LaneClear.manaR < myHero.mana/myHero.maxMana*100 then
           CastSpell(_R, target) 
-        end 
+        end
       else 
         if Config.LaneClear.W and Config.LaneClear.manaW < myHero.mana/myHero.maxMana*100 then CastSpell(_W, target) end
         if Config.LaneClear.E and Config.LaneClear.manaE < myHero.mana/myHero.maxMana*100 then CastSpell(_E, target) end 
@@ -6655,17 +6739,18 @@ class "Ryze"
         if x2 and x2 >= 1 then CastSpell(_Q, x1.x, x1.z) end 
       end
       if self.passiveTracker >= 5 then 
-        if myHero:GetSpellData(_W).currentCd > 0 and myHero:GetSpellData(_E).currentCd > 0 and (myHero:GetSpellData(_R).level > 0 and myHero:GetSpellData(_R).currentCd > 0 or true) and Config.Combo.Q then
+        if Config.Combo.Q then
           local x1, x2, x3 = UPL.VP:GetLineCastPosition(target, 0.25, 55, 900, 1875, myHero, false) 
           if x2 and x2 >= 2 then CastSpell(_Q, x1.x, x1.z) end 
-        elseif myHero:GetSpellData(_Q).currentCd > 0 and myHero:GetSpellData(_W).currentCd > 0 and myHero:GetSpellData(_R).currentCd > 0 and Config.Combo.E then 
+        end
+        if myHero:CanUseSpell(_Q) == COOLDOWN and myHero:CanUseSpell(_W) == COOLDOWN and myHero:CanUseSpell(_R) == COOLDOWN and Config.Combo.E then 
           CastSpell(_E, target) 
-        elseif myHero:GetSpellData(_Q).currentCd > 0 and (myHero:GetSpellData(_R).level > 0 and myHero:GetSpellData(_R).currentCd > 0 or true) and Config.Combo.W then
+        elseif myHero:CanUseSpell(_Q) == COOLDOWN and myHero:CanUseSpell(_R) == COOLDOWN and Config.Combo.W then
           CastSpell(_W, target) 
-        elseif myHero:GetSpellData(_Q).currentCd > 0 and Config.Combo.R then
+        elseif myHero:CanUseSpell(_Q) == COOLDOWN and Config.Combo.R then
           CastSpell(_R, target) 
         end 
-      else 
+      else
         if Config.Combo.W then CastSpell(_W, target) end
         if Config.Combo.E then CastSpell(_E, target) end 
       end 
@@ -6686,14 +6771,15 @@ class "Ryze"
         if x2 and x2 >= 1 then CastSpell(_Q, x1.x, x1.z) end 
       end
       if self.passiveTracker >= 5 then 
-        if myHero:GetSpellData(_W).currentCd > 0 and myHero:GetSpellData(_E).currentCd > 0 and myHero:GetSpellData(_R).currentCd > 0 and Config.Harrass.Q and Config.Harrass.manaQ <= 100*myHero.mana/myHero.maxMana then
+        if Config.Harrass.Q and Config.Harrass.manaQ <= 100*myHero.mana/myHero.maxMana then
           local x1, x2, x3 = UPL.VP:GetLineCastPosition(target, 0.25, 55, 900, 1875, myHero, false) 
           if x2 and x2 >= 2 then CastSpell(_Q, x1.x, x1.z) end 
-        elseif myHero:GetSpellData(_Q).currentCd > 0 and myHero:GetSpellData(_W).currentCd > 0 and myHero:GetSpellData(_R).currentCd > 0 and Config.Harrass.E and Config.Harrass.manaE <= 100*myHero.mana/myHero.maxMana then 
+        end
+        if myHero:CanUseSpell(_Q) == COOLDOWN and myHero:CanUseSpell(_W) == COOLDOWN and Config.Harrass.E and Config.Harrass.manaE <= 100*myHero.mana/myHero.maxMana then 
           CastSpell(_E, target) 
-        elseif myHero:GetSpellData(_Q).currentCd > 0 and myHero:GetSpellData(_R).currentCd > 0 and Config.Harrass.W and Config.Harrass.manaW <= 100*myHero.mana/myHero.maxMana then
+        elseif myHero:CanUseSpell(_Q) == COOLDOWN and Config.Harrass.W and Config.Harrass.manaW <= 100*myHero.mana/myHero.maxMana then
           CastSpell(_W, target) 
-        end 
+        end
       else 
         if Config.Harrass.W and Config.Harrass.manaW <= 100*myHero.mana/myHero.maxMana then CastSpell(_W, target) end
         if Config.Harrass.E and Config.Harrass.manaE <= 100*myHero.mana/myHero.maxMana then CastSpell(_E, target) end 
@@ -7247,6 +7333,7 @@ class "Thresh"
     Config.kConfig:addDynamicParam("Combo", "Combo", SCRIPT_PARAM_ONKEYDOWN, false, 32)
     Config.kConfig:addDynamicParam("Harrass", "Harrass", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
     if Smite ~= nil then Config.Misc:addParam("S", "Smitegrab", SCRIPT_PARAM_ONOFF, true) end
+    AddGapcloseCallback(_Q, data[0].range, false, Config.Misc)
   end
 
   function Thresh:GetBestTarget(Range)
@@ -7275,7 +7362,19 @@ class "Thresh"
     end
 
     if target and myHero:CanUseSpell(_E) == READY and Config.Combo.E and GetDistance(target,myHero) < data[2].range then
-      Cast(_E, target, false, true, 1)
+      local flayTowards = nil
+      if #GetAllyHeroes() > 0 then
+        for _,unit in pairs(GetAllyHeroes()) do
+          if GetDistance(unit) < 1000 then
+            flayTowards = unit
+          end
+        end
+      end
+      if flayTowards then
+        Cast(_E, flayTowards, false, true, 1, target)
+      else
+        Cast(_E, myHero, false, true, 1, target)
+      end
     end
 
     if target and myHero:CanUseSpell(_R) == READY and Config.Combo.R then
@@ -7416,6 +7515,8 @@ class "Vayne"
     Cfg:addSubMenu("Target Selector", "ts")
     Cfg.ts:addTS(self.ts)
     ArrangeTSPriorities()
+    self.lastCalc = 0
+    self.cdTable = {}
     self:Menu()
     AddTickCallback(function() self:DoSomething() end)
   end
@@ -7427,12 +7528,11 @@ class "Vayne"
     Config.Harrass:addParam("Q", "Use Q", SCRIPT_PARAM_ONOFF, true)
     Config.Harrass:addParam("E", "Use E", SCRIPT_PARAM_ONOFF, true)
     Config.LaneClear:addParam("Q", "Use Q", SCRIPT_PARAM_ONOFF, true)
-    Config.LaneClear:addParam("E", "Use E", SCRIPT_PARAM_ONOFF, true)
+    Config.LaneClear:addParam("E", "Use E", SCRIPT_PARAM_ONOFF, false)
     Config.LastHit:addParam("Q", "Use Q", SCRIPT_PARAM_ONOFF, true)
-    Config.LastHit:addParam("E", "Use E", SCRIPT_PARAM_ONOFF, true)
+    Config.LastHit:addParam("E", "Use E", SCRIPT_PARAM_ONOFF, false)
     Config.Killsteal:addParam("Q", "Use Q", SCRIPT_PARAM_ONOFF, true)
     Config.Killsteal:addParam("E", "Use E", SCRIPT_PARAM_ONOFF, true)
-    Config.Killsteal:addParam("R", "Use R", SCRIPT_PARAM_ONOFF, true)
     if Ignite ~= nil then Config.Killsteal:addParam("I", "Ignite", SCRIPT_PARAM_ONOFF, true) end
     Config.Harrass:addParam("manaQ", "Mana Q", SCRIPT_PARAM_SLICE, 30, 0, 100, 0)
     Config.Harrass:addParam("manaE", "Mana E", SCRIPT_PARAM_SLICE, 30, 0, 100, 0)
@@ -7446,9 +7546,13 @@ class "Vayne"
     Config.kConfig:addDynamicParam("LaneClear", "Lane Clear", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("V"))
     Config.Misc:addParam("offsetE", "Max E range %", SCRIPT_PARAM_SLICE, 100, 0, 100, 0)
     Config.Misc:addDynamicParam("Ea", "Auto E if can stun", SCRIPT_PARAM_ONOFF, true)
+    AddGapcloseCallback(_E, 500, true, Config.Misc)
   end
 
   function Vayne:DoSomething()
+    for _,k in pairs(GetEnemyHeroes()) do
+      self.cdTable[k.networkID] = {[_Q] = k:GetSpellData(_Q).currentCd, [_W] = k:GetSpellData(_W).currentCd, [_E] = k:GetSpellData(_E).currentCd, [_R] = k:GetSpellData(_R).currentCd}
+    end
     if not Config.Misc.Ea or not sReady[_E] then return end
     for k,enemy in pairs(GetEnemyHeroes()) do
       if ValidTarget(enemy, 1000) and enemy ~= nil and not enemy.dead then
@@ -7458,15 +7562,17 @@ class "Vayne"
   end
 
   function Vayne:MakeUnitHugTheWall(unit)
-    if not unit or unit.dead or not unit.visible or not sReady[_E] then return end
+    if not unit or unit.dead or not unit.visible or not sReady[_E] or GetInGameTimer()-self.lastCalc < 0.1 then return end
+    self.lastCalc = GetInGameTimer()
     local x, y, z = UPL:Predict(_E, myHero, unit)
-    for _=0,(450-unit.boundingRadius)*Config.Misc.offsetE/100,50 do
-      local dir = x+(x-myHero):normalized()*_
+    for _=0,(450)*Config.Misc.offsetE/100,50 do
+      local dir = x+(Vector(x)-myHero):normalized()*_
       if IsWall(D3DXVECTOR3(dir.x,dir.y,dir.z)) then
         Cast(_E, unit, true)
-        return
+        return true
       end
     end
+    return false
   end
 
   function Vayne:LastHit()
@@ -7744,11 +7850,11 @@ class "Yasuo"
     if sReady[_E] then
       local minion = nil
       for _,k in pairs(Mobs.objects) do
-        if not minion and k and GetStacks(k) == 0 and GetDistanceSqr(k) < data[2].range*data[2].range then minion = k end
+        local kPos = myHero+(Vector(k)-myHero):normalized()*data[2].range
+        if not minion and k and GetStacks(k) == 0 and GetDistanceSqr(k) < data[2].range*data[2].range and GetDistanceSqr(kPos,x) < GetDistanceSqr(myHero,x) then minion = k end
         if minion and k and GetStacks(k) == 0 and GetDistanceSqr(k) < data[2].range*data[2].range then
           local mPos = myHero+(Vector(minion)-myHero):normalized()*data[2].range
-          local kPos = myHero+(Vector(k)-myHero):normalized()*data[2].range
-          if GetDistanceSqr(mPos,x) < GetDistanceSqr(kPos,x) then
+          if GetDistanceSqr(mPos,x) < GetDistanceSqr(kPos,x) and GetDistanceSqr(mPos,x) < GetDistanceSqr(myHero,x) then
             minion = k
           end
         end
@@ -7762,17 +7868,15 @@ class "Yasuo"
   end
 
   function Yasuo:ProcessSpell(unit, spell)
-    if not loadedEvade then
-      if (Config.Misc.Wa or (Config.kConfig.Combo and Config.Combo.W)) and unit and unit.team ~= myHero.team and GetDistance(unit) < 1500 then
-        if myHero == spell.target and spell.name:lower():find("attack") and unit.range > 475 then
+    if (Config.Misc.Wa or (Config.kConfig.Combo and Config.Combo.W)) and unit and unit.team ~= myHero.team and GetDistance(unit) < 1500 then
+      if myHero == spell.target and spell.name:lower():find("attack") and (unit.range >= 450 or unit.isRanged) and Config.misc.Waa and GetDmg("AD",unit,myHero)/myHero.maxHealth > 0.1337 then
+        local wPos = myHero + (Vector(unit) - myHero):normalized() * data[1].range 
+        Cast(_W, wPos)
+      elseif spell.endPos and not spell.target and not loadedEvade or (_G.Evadeee_Loaded and _G.Evadeee_impossibleToEvade) then
+        local makeUpPos = unit + (Vector(spell.endPos)-unit):normalized()*GetDistance(unit)
+        if GetDistance(makeUpPos) < myHero.boundingRadius*3 or GetDistance(spell.endPos) < myHero.boundingRadius*3 then
           local wPos = myHero + (Vector(unit) - myHero):normalized() * data[1].range 
           Cast(_W, wPos)
-        elseif spell.endPos and not spell.target then
-          local makeUpPos = unit + (Vector(spell.endPos)-unit):normalized()*GetDistance(unit)
-          if GetDistance(makeUpPos) < myHero.boundingRadius*3 or GetDistance(spell.endPos) < myHero.boundingRadius*3 then
-            local wPos = myHero + (Vector(unit) - myHero):normalized() * data[1].range 
-            Cast(_W, wPos)
-          end
         end
       end
     end
@@ -7799,6 +7903,7 @@ class "Yasuo"
     Config.kConfig:addDynamicParam("LaneClear", "Lane Clear", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("V"))
     Config.Misc:addDynamicParam("Flee", "Flee", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("T"))
     Config.Misc:addDynamicParam("Wa", "Auto Shield with W", SCRIPT_PARAM_ONOFF, true)
+    Config.Misc:addDynamicParam("Waa", "Auto Shield AAs with W", SCRIPT_PARAM_ONOFF, true)
     DelayAction(function()
         if loadedEvade then
           Config:addSubMenu("Windwall", "Windwall")

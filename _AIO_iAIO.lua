@@ -1,7 +1,7 @@
 local AUTOUPDATES = true
 local SCRIPTSTATUS = true
 local ScriptName = "iCreative's AIO"
-local version = 1.087
+local version = 1.090
 local champions = {
     ["Riven"]           = true,
     ["Xerath"]          = true,
@@ -63,37 +63,20 @@ function CheckUpdate()
 end
 
 
-function TargetHaveBuffType(buffType, target)
-  local target = target or myHero
-  for i = 1, target.buffCount do
-    local tBuff = target:getBuff(i)
-    if BuffIsValid(tBuff) then
-        if tBuff.type == buffType then return true end
+function ObjectsInArea(objects, range, position)
+    local objects2 = {}
+    for i, object in ipairs(objects) do
+        if ValidTarget(object) then
+            if GetDistanceSqr(position, object) <= range * range then
+                table.insert(objects2, object)
+            end
+        end
     end
-  end
-  return false
+    return objects2
 end
-
-function EnemiesWithBuffType(buffType, range) --29
-  local enemies = {}
-  if #GetEnemyHeroes() > 0 then
-    for idx, enemy in ipairs(GetEnemyHeroes()) do
-      if ValidTarget(enemy, range) and TargetHaveBuffType(buffType, enemy) then
-        table.insert(enemies, enemy)
-      end
-    end
-  end
-  return enemies
-end
-
 
 function OnLoad()
-    local r = _Required()
-    r:Add({Name = "SimpleLib", Url = "raw.githubusercontent.com/jachicao/BoL/master/SimpleLib.lua"})
-    r:Check()
-    if r:IsDownloading() then return end
-    if OrbwalkManager == nil then print("Check your SimpleLib file, isn't working... The script can't load without SimpleLib. Try to copy-paste the entire SimpleLib.lua on your common folder.") return end
-
+    if not RequireSimpleLib() then return end
     DelayAction(function() _arrangePriorities() end, 10)
     DelayAction(function() CheckUpdate() end, 5)
 
@@ -151,13 +134,14 @@ function _Yasuo:LoadVariables()
     --Q3 Delay 0.35, Speed = 1200, Width = 90, Range = 1100
     --EQ3 Delay = 0.147
     self.WSpell = _Spell({Slot = _W, DamageName = "W", Range = 400, Delay = 0, Type = SPELL_TYPE.SELF})
-    self.ESpell = _Spell({Slot = _E, DamageName = "E", Range = 475, Delay = 0, Speed = 1300, Type = SPELL_TYPE.TARGETTED}):AddDraw()
+    self.ESpell = _Spell({Slot = _E, DamageName = "E", Range = 475, Delay = 0, Speed = 1600, Type = SPELL_TYPE.TARGETTED}):AddDraw()
     self.RSpell = _Spell({Slot = _R, DamageName = "R", Range = 2500, Type = SPELL_TYPE.SELF}):AddDraw()
     self.Q = { IsReady = function() return self.QSpell:IsReady() end}
     self.W = { IsReady = function() return self.WSpell:IsReady() end}
     self.E = { IsReady = function() return self.ESpell:IsReady() end}
     self.R = { IsReady = function() return self.RSpell:IsReady() end}
     self.DashedUnits = {}
+    self.KnockedUnits = {}
 end
 
 function _Yasuo:LoadMenu()
@@ -251,7 +235,7 @@ function _Yasuo:LoadMenu()
                 self.QSpell.Type = SPELL_TYPE.SELF
                 self.QSpell.Range = 270
                 self.QSpell.Width = 270
-                self.QSpell.Delay = 0.147
+                self.QSpell.Delay = 0--0.147
                 self.QSpell.Speed = math.huge
             elseif self.QState == 3 then
                 self.QSpell.Type = SPELL_TYPE.LINEAR
@@ -267,11 +251,11 @@ function _Yasuo:LoadMenu()
                 self.QSpell.Speed = 8700
             end
 
-            if self.Menu.Auto.R > 0 and #EnemiesWithBuffType(29, self.RSpell.Range) >= self.Menu.Auto.R then
+            if self.Menu.Auto.R > 0 and #self:EnemiesKnocked() >= self.Menu.Auto.R then
                 self.RSpell:Cast(self.TS.target)
             end
 
-            if self.Menu.Keys.StackQ and not OrbwalkManager:IsCombo() and self.QSpell:IsReady() and OrbwalkManager:CanMove() and self.QState < 3 and not self.Menu.Keys.Run then
+            if self.Menu.Keys.StackQ and self.QSpell:IsReady() and OrbwalkManager:CanMove() and self.QState < 3 and not self.Menu.Keys.Run then
                 self.EnemyMinions:update()
                 for i, object in ipairs(self.EnemyMinions.objects) do
                     if self.QSpell:IsReady() and self.QSpell:ValidTarget(object) then
@@ -342,8 +326,38 @@ function _Yasuo:LoadMenu()
                 end
             end
         end
+    )   
+    AddApplyBuffCallback(
+        function(source, unit, buff)
+            if unit and source and buff and buff.name and unit.team and buff.type then
+                if buff.type == 29 and unit.team ~= myHero.team then
+                    self.KnockedUnits[unit.networkID] = true
+                elseif buff.name:lower() == "yasuodashscalar" and unit.isMe then
+                    --self.IsDashing = true
+                end
+            end
+        end
+    )
+    AddRemoveBuffCallback(
+        function(unit, buff)
+            if unit and buff and buff.name and buff.name and unit.team and buff.type then
+                if buff.type == 29 and unit.team ~= myHero.team  then
+                    self.KnockedUnits[unit.networkID] = nil
+                elseif buff.name:lower() == "yasuodashscalar" and unit.isMe then
+                    --self.IsDashing = true
+                end
+            end
+        end
     )
     self.MenuLoaded = true
+end
+
+function _Yasuo:EnemiesKnocked()
+    local Knockeds = {}
+    for i, enemy in ipairs(GetEnemyHeroes()) do
+        if IsValidTarget(enemy) and self.KnockedUnits[enemy.networkID] ~= nil then table.insert(Knockeds, enemy) end
+    end
+    return Knockeds
 end
 
 function _Yasuo:KillSteal()
@@ -434,10 +448,10 @@ function _Yasuo:Combo()
                 CastIgnite(target)
             end
         end
-        if self.Menu.Combo.R2 > 0 and #EnemiesWithBuffType(29, self.RSpell.Range) >= self.Menu.Combo.R2 then
+        if self.Menu.Combo.R2 > 0 and #self:EnemiesKnocked() >= self.Menu.Combo.R2 then
             self.RSpell:Cast(self.TS.target)
         end
-        if self.Menu.Combo.R1 and dmg >= target.health and r then
+        if self.Menu.Combo.R1 and dmg >= target.health and #ObjectsInArea(GetEnemyHeroes(), self.RSpell.Range, myHero) < 3 then
             self:CastR(target)
         end
         if self.Menu.Combo.E and GetDistanceSqr(myHero, target) > math.pow(myHero.range + myHero.boundingRadius + 50, 2) then
@@ -491,7 +505,7 @@ function _Yasuo:CastE(target)
 end
 
 function _Yasuo:CastR(target)
-    if self.RSpell:IsReady() and IsValidTarget(target) and TargetHaveBuffType(29, target) then
+    if self.RSpell:IsReady() and IsValidTarget(target) and self.KnockedUnits[target.networkID] ~= nil then
         self.RSpell:Cast(target)
     end
 end
@@ -561,7 +575,7 @@ function _Yasuo:GetComboDamage(target, q, w, e, r)
     local currentManaWasted = 0
     if ValidTarget(target) then
         if q then
-            comboDamage = comboDamage + self.QSpell:Damage(target) * (4 - self.QState)
+            comboDamage = comboDamage + self.QSpell:Damage(target) * 2
         end
         if w then
         end
@@ -571,7 +585,7 @@ function _Yasuo:GetComboDamage(target, q, w, e, r)
         if r then
             comboDamage = comboDamage + self.RSpell:Damage(target)
         end
-        comboDamage = comboDamage + getDmg("AD", target, myHero) * 3
+        comboDamage = comboDamage + getDmg("AD", target, myHero) * 2
         comboDamage = comboDamage + DamageItems(target)
     end
     comboDamage = comboDamage * self:GetOverkill()
@@ -671,6 +685,7 @@ function _Fiora:LoadMenu()
 
     self.Menu:addSubMenu(myHero.charName.." - Key Settings", "Keys")
         OrbwalkManager:LoadCommonKeys(self.Menu.Keys)
+        self.Menu.Keys:addParam("Run", "Run with Q", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("T"))
 
     AddTickCallback(
         function()
@@ -682,6 +697,22 @@ function _Fiora:LoadMenu()
             if not OrbwalkManager:IsNone() and not self:IsQ1() and os.clock() - self.Q.LastCastTime > 3.8 and os.clock() - self.Q.LastCastTime < 4.5  then
                 local target = OrbwalkManager:ObjectInRange(self.QSpell.Range)
                 self.QSpell:Cast(target)
+            end
+            if self.Menu.Keys.Run then
+                if OrbwalkManager:CanMove() then
+                    myHero:MoveTo(mousePos.x, mousePos.z)
+                end
+                self.QSpell.EnemyMinions:update()
+                local best = nil
+                for i, object in ipairs(self.QSpell.EnemyMinions.objects) do
+                    if self.QSpell:ValidTarget(object) then
+                        if best == nil then best = object
+                        elseif GetDistanceSqr(myHero, best) < GetDistanceSqr(myHero, object) then best = object end
+                    end
+                end
+                if self.QSpell:ValidTarget(best) and GetDistanceSqr(myHero, best) > GetDistanceSqr(mousePos, best) then
+                    self.QSpell:Cast(best)
+                end
             end
             if OrbwalkManager:IsCombo() then self:Combo()
             elseif OrbwalkManager:IsHarass() then self:Harass()
@@ -960,6 +991,10 @@ function _Kennen:LoadVariables()
     for idx, enemy in ipairs(GetEnemyHeroes()) do
         self.EnemySoonStunned[enemy.charName] = false
     end
+    self.EnemiesMarkCounter = {}
+    for idx, enemy in ipairs(GetEnemyHeroes()) do
+        self.EnemiesMarkCounter[enemy.charName] = 0
+    end
     self.AutoAttackMarkObject = nil
     self.TS = TargetSelector(TARGET_LESS_CAST_PRIORITY, 950, DAMAGE_MAGIC)
     self.EnemyMinions = minionManager(MINION_ENEMY, 900, myHero, MINION_SORT_MAXHEALTH_DEC)
@@ -1111,7 +1146,7 @@ function _Kennen:LoadMenu()
             end
         end
     )
-
+    --[[
     AddCreateObjCallback(
         function(obj)
             if obj and obj.name and obj.valid then
@@ -1150,6 +1185,32 @@ function _Kennen:LoadMenu()
                             end
                         end
                     end
+                end
+            end
+        end
+    )]]
+
+    AddApplyBuffCallback(
+        function(source, unit, buff)
+            if unit and source and buff and buff.name and buff.name:lower():find("kennen") and unit.type == myHero.type then
+                if buff.name:lower() == "kennenmarkofstorm" then
+                    self.EnemiesMarked[unit.charName] = true
+                    self.EnemiesMarkCounter[unit.charName] = self.EnemiesMarkCounter[unit.charName] + 1
+                    if self.EnemiesMarkCounter[unit.charName] == 2 then
+                        self.EnemySoonStunned[unit.charName] = true
+                    elseif self.EnemiesMarkCounter[unit.charName] == 3 then
+                        self.EnemiesMarkCounter[unit.charName] = 0
+                        self.EnemySoonStunned[unit.charName] = false
+                    end
+                end
+            end
+        end
+    )
+    AddRemoveBuffCallback(
+        function(unit, buff)
+            if unit and buff and buff.name and buff.name:lower():find("kennen") and unit.type == myHero.type then
+                if buff.name:lower() == "kennenmarkofstorm" then
+                    self.EnemiesMarked[unit.charName] = false
                 end
             end
         end
@@ -5844,10 +5905,10 @@ function GetBestCombo(target)
         if os.clock() - time <= RefreshTime  then 
             return damagetable[1], damagetable[2], damagetable[3], damagetable[4], damagetable[5] 
         else
-            if champ.Q.IsReady() then q = {false, true} end
-            if champ.W.IsReady() then w = {false, true} end
-            if champ.E.IsReady() then e = {false, true} end
-            if champ.R.IsReady() then r = {false, true} end
+            if champ.Q and champ.Q.IsReady() then q = {false, true} end
+            if champ.W and champ.W.IsReady() then w = {false, true} end
+            if champ.E and champ.E.IsReady() then e = {false, true} end
+            if champ.R and champ.R.IsReady() then r = {false, true} end
             local bestdmg = 0
             local best = {champ.Q.IsReady(), champ.W.IsReady(), champ.E.IsReady(), champ.R.IsReady()}
             local dmg, mana = champ:GetComboDamage(target, champ.Q.IsReady(), champ.W.IsReady(), champ.E.IsReady(), champ.R.IsReady())
@@ -5997,193 +6058,113 @@ function CountEnemies(point, range)
     return ChampCount
 end
 
-class "_Required"
-function _Required:__init()
-    self.requirements = {}
-    self.downloading = {}
-    return self
-end
-
-function _Required:Add(t)
-    assert(t and type(t) == "table", "_Required: table is invalid!")
-    local name = t.Name
-    assert(name and type(name) == "string", "_Required: name is invalid!")
-    local url = t.Url
-    assert(url and type(url) == "string", "_Required: url is invalid!")
-    local extension = t.Extension~=nil and t.Extension or "lua"
-    local usehttps = t.UseHttps~=nil and t.UseHttps or true
-    table.insert(self.requirements, {Name = name, Url = url, Extension = extension, UseHttps = usehttps})
-end
-
-function _Required:Check()
-    for i, tab in pairs(self.requirements) do
-        local name = tab.Name
-        local url = tab.Url
-        local extension = tab.Extension
-        local usehttps = tab.UseHttps
-        if not FileExist(LIB_PATH..name.."."..extension) then
-            print("Downloading a required library called "..name.. ". Please wait...")
-            local d = _Downloader(tab)
-            table.insert(self.downloading, d)
-        end
-    end
-    
-    if #self.downloading > 0 then
-        for i = 1, #self.downloading, 1 do 
-            local d = self.downloading[i]
-            AddTickCallback(function() d:Download() end)
-        end
-        self:CheckDownloads()
+function RequireSimpleLib()
+    if FileExist(LIB_PATH.."SimpleLib.lua") and not FileExist(SCRIPT_PATH.."SimpleLib.lua") then
+        require "SimpleLib"
+        return true
+    elseif FileExist(LIB_PATH.."SimpleLib.lua") and FileExist(SCRIPT_PATH.."SimpleLib.lua") then
+        print("SimpleLib.lua should not be in Custom Script (Only on Common folder), delete it from there...")
+        return false
     else
-        for i, tab in pairs(self.requirements) do
-            local name = tab.Name
-            local url = tab.Url
-            local extension = tab.Extension
-            local usehttps = tab.UseHttps
-            if FileExist(LIB_PATH..name.."."..extension) and extension == "lua" then
-                require(name)
-            end
+        local function Base64Encode2(data)
+            local b='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+            return ((data:gsub('.', function(x)
+                local r,b='',x:byte()
+                for i=8,1,-1 do r=r..(b%2^i-b%2^(i-1)>0 and '1' or '0') end
+                return r;
+            end)..'0000'):gsub('%d%d%d?%d?%d?%d?', function(x)
+                if (#x < 6) then return '' end
+                local c=0
+                for i=1,6 do c=c+(x:sub(i,i)=='1' and 2^(6-i) or 0) end
+                return b:sub(c+1,c+1)
+            end)..({ '', '==', '=' })[#data%3+1])
         end
-    end
-end
-
-function _Required:CheckDownloads()
-    if #self.downloading == 0 then 
-        print("Required libraries downloaded. Please reload with 2x F9.")
-    else
-        for i = 1, #self.downloading, 1 do
-            local d = self.downloading[i]
-            if d.GotScript then
-                table.remove(self.downloading, i)
-                break
-            end
-        end
-        DelayAction(function() self:CheckDownloads() end, 2) 
-    end 
-end
-
-function _Required:IsDownloading()
-    return self.downloading ~= nil and #self.downloading > 0 or false
-end
-class "_Downloader"
-function _Downloader:__init(t)
-    local name = t.Name
-    local url = t.Url
-    local extension = t.Extension~=nil and t.Extension or "lua"
-    local usehttps = t.UseHttps~=nil and t.UseHttps or true
-    self.SavePath = LIB_PATH..name.."."..extension
-    self.ScriptPath = '/BoL/TCPUpdater/GetScript'..(usehttps and '5' or '6')..'.php?script='..self:Base64Encode(url)..'&rand='..math.random(99999999)
-    self:CreateSocket(self.ScriptPath)
-    self.DownloadStatus = 'Connect to Server'
-    self.GotScript = false
-end
-
-function _Downloader:CreateSocket(url)
-    if not self.LuaSocket then
-        self.LuaSocket = require("socket")
-    else
-        self.Socket:close()
-        self.Socket = nil
-        self.Size = nil
-        self.RecvStarted = false
-    end
-    self.Socket = self.LuaSocket.tcp()
-    if not self.Socket then
-        print('Socket Error')
-    else
-        self.Socket:settimeout(0, 'b')
-        self.Socket:settimeout(99999999, 't')
-        self.Socket:connect('sx-bol.eu', 80)
-        self.Url = url
-        self.Started = false
-        self.LastPrint = ""
-        self.File = ""
-    end
-end
-
-function _Downloader:Download()
-    if self.GotScript then return end
-    self.Receive, self.Status, self.Snipped = self.Socket:receive(1024)
-    if self.Status == 'timeout' and not self.Started then
-        self.Started = true
-        self.Socket:send("GET "..self.Url.." HTTP/1.1\r\nHost: sx-bol.eu\r\n\r\n")
-    end
-    if (self.Receive or (#self.Snipped > 0)) and not self.RecvStarted then
-        self.RecvStarted = true
-        self.DownloadStatus = 'Downloading Script (0%)'
-    end
-
-    self.File = self.File .. (self.Receive or self.Snipped)
-    if self.File:find('</si'..'ze>') then
-        if not self.Size then
-            self.Size = tonumber(self.File:sub(self.File:find('<si'..'ze>')+6,self.File:find('</si'..'ze>')-1))
-        end
-        if self.File:find('<scr'..'ipt>') then
-            local _,ScriptFind = self.File:find('<scr'..'ipt>')
-            local ScriptEnd = self.File:find('</scr'..'ipt>')
-            if ScriptEnd then ScriptEnd = ScriptEnd - 1 end
-            local DownloadedSize = self.File:sub(ScriptFind+1,ScriptEnd or -1):len()
-            self.DownloadStatus = 'Downloading Script ('..math.round(100/self.Size*DownloadedSize,2)..'%)'
-        end
-    end
-    if self.File:find('</scr'..'ipt>') then
-        self.DownloadStatus = 'Downloading Script (100%)'
-        local a,b = self.File:find('\r\n\r\n')
-        self.File = self.File:sub(a,-1)
-        self.NewFile = ''
-        for line,content in ipairs(self.File:split('\n')) do
-            if content:len() > 5 then
-                self.NewFile = self.NewFile .. content
-            end
-        end
-        local HeaderEnd, ContentStart = self.NewFile:find('<sc'..'ript>')
-        local ContentEnd, _ = self.NewFile:find('</scr'..'ipt>')
-        if not ContentStart or not ContentEnd then
-            if self.CallbackError and type(self.CallbackError) == 'function' then
-                self.CallbackError()
-            end
+        local SavePath = LIB_PATH.."SimpleLib.lua"
+        local ScriptPath = '/BoL/TCPUpdater/GetScript'..(usehttps and '5' or '6')..'.php?script='..Base64Encode2("raw.githubusercontent.com/jachicao/BoL/master/SimpleLib.lua")..'&rand='..math.random(99999999)
+        local GotScript = false
+        local LuaSocket = nil
+        local Socket = nil
+        local Size = nil
+        local RecvStarted = false
+        local Receive, Status, Snipped = nil, nil, nil
+        local Started = false
+        local File = ""
+        local NewFile = ""
+        if not LuaSocket then
+            LuaSocket = require("socket")
         else
-            local newf = self.NewFile:sub(ContentStart+1,ContentEnd-1)
-            local newf = newf:gsub('\r','')
-            if newf:len() ~= self.Size then
-                if self.CallbackError and type(self.CallbackError) == 'function' then
-                    self.CallbackError()
-                end
-                return
-            end
-            local newf = Base64Decode(newf)
-            if type(load(newf)) ~= 'function' then
-                if self.CallbackError and type(self.CallbackError) == 'function' then
-                    self.CallbackError()
-                end
-            else
-                local f = io.open(self.SavePath,"w+b")
-                f:write(newf)
-                f:close()
-                if self.CallbackUpdate and type(self.CallbackUpdate) == 'function' then
-                    self.CallbackUpdate(self.OnlineVersion, self.LocalVersion)
-                end
-            end
+            Socket:close()
+            Socket = nil
+            Size = nil
+            RecvStarted = false
         end
-        self.GotScript = true
+        Socket = LuaSocket.tcp()
+        if not Socket then
+            print('Socket Error')
+        else
+            Socket:settimeout(0, 'b')
+            Socket:settimeout(99999999, 't')
+            Socket:connect('sx-bol.eu', 80)
+            Started = false
+            File = ""
+        end
+        AddTickCallback(function()
+            if GotScript then return end
+            Receive, Status, Snipped = Socket:receive(1024)
+            if Status == 'timeout' and not Started then
+                Started = true
+                print("Downloading a library called SimpleLib. Please wait...")
+                Socket:send("GET "..ScriptPath.." HTTP/1.1\r\nHost: sx-bol.eu\r\n\r\n")
+            end
+            if (Receive or (#Snipped > 0)) and not RecvStarted then
+                RecvStarted = true
+            end
+
+            File = File .. (Receive or Snipped)
+            if File:find('</si'..'ze>') then
+                if not Size then
+                    Size = tonumber(File:sub(File:find('<si'..'ze>') + 6, File:find('</si'..'ze>') - 1))
+                end
+                if File:find('<scr'..'ipt>') then
+                    local _, ScriptFind = File:find('<scr'..'ipt>')
+                    local ScriptEnd = File:find('</scr'..'ipt>')
+                    if ScriptEnd then ScriptEnd = ScriptEnd - 1 end
+                    local DownloadedSize = File:sub(ScriptFind + 1,ScriptEnd or -1):len()
+                end
+            end
+            if File:find('</scr'..'ipt>') then
+                local a,b = File:find('\r\n\r\n')
+                File = File:sub(a,-1)
+                NewFile = ''
+                for line,content in ipairs(File:split('\n')) do
+                    if content:len() > 5 then
+                        NewFile = NewFile .. content
+                    end
+                end
+                local HeaderEnd, ContentStart = NewFile:find('<sc'..'ript>')
+                local ContentEnd, _ = NewFile:find('</scr'..'ipt>')
+                if not ContentStart or not ContentEnd then
+                else
+                    local newf = NewFile:sub(ContentStart + 1,ContentEnd - 1)
+                    local newf = newf:gsub('\r','')
+                    if newf:len() ~= Size then
+                        return
+                    end
+                    local newf = Base64Decode(newf)
+                    if type(load(newf)) ~= 'function' then
+                    else
+                        local f = io.open(SavePath, "w+b")
+                        f:write(newf)
+                        f:close()
+                        print("Required library downloaded. Please reload with 2x F9.")
+                    end
+                end
+                GotScript = true
+            end
+        end)
+        return false
     end
 end
-
-function _Downloader:Base64Encode(data)
-    local b='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-    return ((data:gsub('.', function(x)
-        local r,b='',x:byte()
-        for i=8,1,-1 do r=r..(b%2^i-b%2^(i-1)>0 and '1' or '0') end
-        return r;
-    end)..'0000'):gsub('%d%d%d?%d?%d?%d?', function(x)
-        if (#x < 6) then return '' end
-        local c=0
-        for i=1,6 do c=c+(x:sub(i,i)=='1' and 2^(6-i) or 0) end
-        return b:sub(c+1,c+1)
-    end)..({ '', '==', '=' })[#data%3+1])
-end
-
-
 
 if SCRIPTSTATUS then
     assert(load(Base64Decode("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"), nil, "bt", _ENV))() ScriptStatus("SFIHILGNMMF") 
