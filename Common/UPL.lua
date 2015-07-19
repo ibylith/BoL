@@ -39,7 +39,7 @@ assert(load(Base64Decode("G0x1YVIAAQQEBAgAGZMNChoKAAAAAAAAAAAAAQIKAAAABgBAAEFAAA
 
 function UPL:__init()
   if not _G.UPLloaded then
-    _G.UPLversion = 2.01
+    _G.UPLversion = 2.5
     _G.UPLautoupdate = true
     _G.UPLloaded = false
     self.ActiveP = 1
@@ -57,6 +57,13 @@ function UPL:__init()
       [_E] = { speed = 0, delay = 0, range = 0, width = 0, collision = true, aoe = false, type = "linear"},
       [_R] = { speed = 0, delay = 0, range = 0, width = 0, collision = true, aoe = false, type = "linear"}}
     self.predTable = {}
+
+    if FileExist(LIB_PATH .. "SPrediction.lua") then
+      require("SPrediction")
+      self.SP = SPrediction()
+      table.insert(self.predTable, "SPrediction")
+    end
+    
     if FileExist(LIB_PATH .. "VPrediction.lua") then
       require("VPrediction")
       self.VP = VPrediction()
@@ -80,11 +87,6 @@ function UPL:__init()
       table.insert(self.predTable, "HPrediction")
     end
 
-    if FileExist(LIB_PATH .. "SPrediction.lua") then
-      require("SPrediction")
-      self.SP = SPrediction()
-      table.insert(self.predTable, "SPrediction")
-    end
     self:Update()
     DelayAction(function() self:Loaded() end, 3)
     return self
@@ -135,27 +137,27 @@ function UPL:Predict(spell, source, Target)
     Target = source 
     source = myHero
   end
-  if not self:ValidRequest() then return Vector(Target), 0, Vector(Target) end
-  if self:ActivePred() == "VPrediction" then
+  if not self:ValidRequest(spell) then return Vector(Target), -1, Vector(Target) end
+  if self:ActivePred(spell) == "VPrediction" then
       return self:VPredict(Target, self.spellData[spell], source)
-  elseif self:ActivePred() == "Prodiction" then
+  elseif self:ActivePred(spell) == "Prodiction" then
       local Position, info = Prodiction.GetPrediction(Target, self.spellData[spell].range, self.spellData[spell].speed, self.spellData[spell].delay, self.spellData[spell].width, source)
       if Position ~= nil and not info.mCollision() then
         return Position, 2, Vector(Target)
       else
         return Vector(Target), 0, Vector(Target)
       end
-  elseif self:ActivePred() == "DivinePrediction" then
+  elseif self:ActivePred(spell) == "DivinePrediction" then
       local State, Position, perc = self:DPredict(Target, self.spellData[spell], source)
       if perc ~= nil and Position ~= nil then
         return Position, 2, Vector(Target)
       else
         return Vector(Target), 0, Vector(Target)
       end
-  elseif self:ActivePred() == "HPrediction" then
+  elseif self:ActivePred(spell) == "HPrediction" then
       return self:HPredict(Target, spell, source)
-  elseif self:ActivePred() == "SPrediction" then
-      return self.SP:Predict(spell, source, Target)
+  elseif self:ActivePred(spell) == "SPrediction" then
+      return self.SP:Predict(Target, self.spellData[spell].range, self.spellData[spell].speed, self.spellData[spell].delay, self.spellData[spell].width, (myHero.charName == "Lux" or myHero.charName == "Veigar") and 2 or self.spellData[spell].collision, source)
   end
 end
 
@@ -165,8 +167,9 @@ function UPL:AddToMenu(Config)
 end
 
 function UPL:AddToMenu2(Config, state)
-  Config:addParam({state = "Misc", name = "pred", code = SCRIPT_PARAM_LIST, value = self.ActiveP, list = self.predTable})
-  self.Config2 = Config
+  Config:addSubMenu("Prediction Menu", "UPL")
+  self.addToMenu2 = true
+  self.Config = Config.UPL
 end
 
 function UPL:AddSpell(spell, array)
@@ -175,6 +178,10 @@ function UPL:AddSpell(spell, array)
   else
     self.spellData[spell] = {speed = array.speed, delay = array.delay, range = array.range, width = array.width, collision = array.collision, aoe = array.aoe, type = array.type}
     if self.HP ~= nil then self:SetupHPredSpell(spell) end
+    if self.addToMenu2 then
+      str = {[-3] = "P", [-2] = "Q3", [-1] = "Q2", [_Q] = "Q", [_W] = "W", [_E] = "E", [_R] = "R"}
+      DelayAction(function() self.Config:addParam(str[spell], str[spell].." Prediction", SCRIPT_PARAM_LIST, self.ActiveP, self.predTable) end, 1)
+    end
   end
 end
 
@@ -247,20 +254,21 @@ function UPL:VPredict(Target, spell, source)
   end
 end
 
-function UPL:ReturnPred(x)
-    if self:ActivePred() == "VPrediction" then
+function UPL:ReturnPred(x, spell)
+    if self:ActivePred(spell) == "VPrediction" then
       return self.VP
-    elseif self:ActivePred() == "HPrediction" then
+    elseif self:ActivePred(spell) == "HPrediction" then
       return self.HP
-    elseif self:ActivePred() == "SPrediction" then
+    elseif self:ActivePred(spell) == "SPrediction" then
       return self.SP
-    elseif self:ActivePred() == "DivinePrediction" then
+    elseif self:ActivePred(spell) == "DivinePrediction" then
       return self.DP
     end
 end
 
-function UPL:ActivePred()
-    local int = self.Config and (self.Config.pred and self.Config.pred or self.ActiveP) or (self.Config2 and self.Config2:getParam("Misc", "pred") or 1)
+function UPL:ActivePred(spell)
+    local str = {[-3] = "P", [-2] = "Q3", [-1] = "Q2", [_Q] = "Q", [_W] = "W", [_E] = "E", [_R] = "R"}
+    local int = not self.addToMenu2 and (self.Config.pred and self.Config.pred or self.ActiveP) or (self.Config[str[spell]] and self.Config[str[spell]] or 1)
     return tostring(self.predTable[int])
 end
 
@@ -272,8 +280,8 @@ function UPL:SetActive(pred)
   end
 end
 
-function UPL:ValidRequest()
-    if GetInGameTimer() - self.LastRequest < self:TimeRequest() then
+function UPL:ValidRequest(x)
+    if GetInGameTimer() - self.LastRequest < self:TimeRequest(x) then
         return false
     else
         self.LastRequest = GetInGameTimer()
@@ -281,10 +289,10 @@ function UPL:ValidRequest()
     end
 end
 
-function UPL:TimeRequest()
-    if self:ActivePred() == "VPrediction" or self:ActivePred() == "HPrediction" or self:ActivePred() == "SPrediction" then
+function UPL:TimeRequest(spell)
+    if self:ActivePred(spell) == "VPrediction" or self:ActivePred(spell) == "HPrediction" or self:ActivePred(spell) == "SPrediction" then
       return 0.001
-    elseif self:ActivePred() == "DivinePrediction" then
+    elseif self:ActivePred(spell) == "DivinePrediction" then
       return 0.2
     else
       return 0.01

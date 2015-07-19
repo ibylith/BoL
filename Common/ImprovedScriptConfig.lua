@@ -1,10 +1,10 @@
 --[[
-	Version: 1.2
-	Updated: June 8th, 2015
+	Version: 1.3
+	Updated: July 16th, 2015
 	Thread link: http://forum.botoflegends.com/topic/64983-library-improvedscriptconfig/
 ]]
 
-_G.IMPROVED_SCRIPT_CONFIG_VERSION = 1.2
+_G.IMPROVED_SCRIPT_CONFIG_VERSION = 1.3
 
 --////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 --////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -44,6 +44,86 @@ end
 --////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 local TICKER = Ticker()
+
+function scriptConfig:clear(clearParams, clearSubMenus)
+	assert(type(clearParams) == "boolean" and type(clearSubMenus) == "boolean", "ImprovedScriptConfig: wrong argument types (<boolean>, <boolean> expected)")
+
+	if clearParams then
+		local i = #self._param
+		while i > 0 do
+			local param = self._param[i]
+			if param._callback then
+				TICKER:RemoveTickCallback(param._callback.TickerID)
+				param._callback = nil
+			end
+			table.remove(self._param, i)
+			i = i - 1
+		end
+	end
+
+	if clearSubMenus then
+		for i, subMenu in ipairs(self._subInstances) do
+			subMenu:clear(clearParams, clearSubMenus)
+			subMenu._parent = nil
+			table.remove(self._subInstances, self:getSubMenuIndex(subMenu.name))
+		end
+	end
+end
+
+--[[
+	Returns whether a sub menu was found and if its header was changed
+]]
+function scriptConfig:modifySubMenuText(name, newHeader)
+	assert(type(name) == "string" and type(newHeader) == "string", "ImprovedScriptConfig: wrong argument types (<string>, <string> expected)")
+
+	local index = self:getSubMenuIndex(name)
+	if index then
+		self._subInstances[index].header = newHeader
+		return true
+	end
+	return false
+end
+
+--[[
+	Returns whether a sub menu was removed
+]]
+function scriptConfig:removeSubMenu(name)
+	assert(type(name) == "string", "ImprovedScriptConfig: wrong argument types (<string> expected)")
+
+	local subMenu = self[name]
+	local subMenuName = self.name .. "_" .. name
+
+	if not subMenu then 
+		return false 
+	end
+
+	for i, data in ipairs(subMenu._param) do
+		subMenu:removeParam(data.var)
+	end
+
+	subMenu._parent = nil
+
+	table.remove(self._subInstances, self:getSubMenuIndex(subMenuName))
+
+	subMenu = nil
+	self[name] = nil
+	return true
+end
+
+--[[
+	Returns index of sub menu given name or nil
+]]
+function scriptConfig:getSubMenuIndex(name)
+	assert(type(name) == "string", "ImprovedScriptConfig: wrong argument types (<string> expected)")
+
+	local subMenuName = self.name .. "_" .. name
+
+	for i, data in ipairs(self._subInstances) do
+		if data.name == subMenuName then
+			return i
+		end
+	end
+end
 
 --[[
 	Adds a config parameter that the user can switch in between On/Off, KeyDown, and KeyToggle

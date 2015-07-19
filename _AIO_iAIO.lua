@@ -1,7 +1,7 @@
 local AUTOUPDATES = true
 local SCRIPTSTATUS = true
 local ScriptName = "iCreative's AIO"
-local version = 1.090
+local version = 1.091
 local champions = {
     ["Riven"]           = true,
     ["Xerath"]          = true,
@@ -5659,25 +5659,25 @@ function _Queue:IsValidCast(key)
         local tipo = OrbwalkManager:GetClearMode()
         if tipo ~= nil then
             if key:lower() == tostring("Q"):lower() then
-                if tipo:lower() == tostring("lane"):lower() then
+                if tipo:lower():find(tostring("lane"):lower()) then
                     return champ.Menu.LaneClear.useQ
                 else
                     return champ.Menu.JungleClear.useQ
                 end
             elseif key:lower() == tostring("W"):lower() then
-                if tipo:lower() == tostring("lane"):lower() then
+                if tipo:lower():find(tostring("lane"):lower())  then
                     return champ.Menu.LaneClear.useW
                 else
                     return champ.Menu.JungleClear.useW
                 end
             elseif key:lower() == tostring("E"):lower() then
-                if tipo:lower() == tostring("lane"):lower() then
+                if tipo:lower():find(tostring("lane"):lower())  then
                     return champ.Menu.LaneClear.useE
                 else
                     return champ.Menu.JungleClear.usee
                 end
             elseif key:lower() == tostring("TIAMAT"):lower() then
-                if tipo:lower() == tostring("lane"):lower() then
+                if tipo:lower():find(tostring("lane"):lower())  then
                     return champ.Menu.LaneClear.useTiamat
                 else
                     return champ.Menu.JungleClear.useTiamat

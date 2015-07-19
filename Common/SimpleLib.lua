@@ -1,6 +1,6 @@
 local AUTOUPDATES = true
 local ScriptName = "SimpleLib"
-_G.SimpleLibVersion = 0.66
+_G.SimpleLibVersion = 0.73
 
 SPELL_TYPE = {LINEAR = 1, CIRCULAR = 2, CONE = 3, TARGETTED = 4, SELF = 5}
 
@@ -679,14 +679,14 @@ function _Spell:__init(tab)
         else
             self.Name = "Spell"..tostring(#SpellManager.spells + 1)
         end
-        self.DamageName = tab.DamageName ~= nil and tab.DamageName or SlotToString(self.Slot)
+        self.DamageName = tab.DamageName ~= nil and tab.DamageName or self.Name
         assert(tab.Range and type(tab.Range) == "number", "_Spell: Range is invalid!")
         self.Range = tab.Range
-        self.EnemyMinions = minionManager(MINION_ENEMY, self.Range + 50, self.Source, MINION_SORT_MAXHEALTH_DEC)
-        self.JungleMinions = minionManager(MINION_JUNGLE, self.Range + 50, self.Source, MINION_SORT_MAXHEALTH_DEC)
+        self.Width = tab.Width ~= nil and tab.Width or 1
+        self.EnemyMinions = minionManager(MINION_ENEMY, self.Range + self.Width + 50, self.Source, MINION_SORT_MAXHEALTH_DEC)
+        self.JungleMinions = minionManager(MINION_JUNGLE, self.Range + self.Width + 50, self.Source, MINION_SORT_MAXHEALTH_DEC)
         self.Delay = tab.Delay ~= nil and tab.Delay or 0
         self.Speed = tab.Speed ~= nil and tab.Speed or math.huge
-        self.Width = tab.Width ~= nil and tab.Width or 1
         self.Collision = tab.Collision ~= nil and tab.Collision or false
         self.Aoe = tab.Aoe ~= nil and tab.Aoe or false
         if self:IsSkillShot() then
@@ -763,6 +763,13 @@ end
 function _Spell:AddDamageFunction(f)
     assert(f and type(f) == "function", "_Spell: DamageFunction is invalid!")
     self.DamageFunction = f
+    return self
+end
+
+function _Spell:AddSlotFunction(f)
+    assert(f and type(f) == "function", "_Spell: SlotFunction is invalid!")
+    self.SlotFunction = f
+    self:LoadTickCallback()
     return self
 end
 
@@ -885,16 +892,17 @@ function _Spell:LoadTickCallback()
                 if self.RangeFunction ~= nil then
                     self.Range = self.RangeFunction()
                 end
-
                 if self.TypeFunction ~= nil then
                     self.Type = self.TypeFunction()
                 end
-
                 if self.DrawSourceFunction ~= nil then
                     self.DrawSource = self.DrawSourceFunction()
                 end
                 if self.WidthFunction ~= nil then
                     self.Width = self.WidthFunction()
+                end
+                if self.SlotFunction ~= nil then
+                    self.Slot = self.SlotFunction()
                 end
             end
         )
@@ -982,7 +990,7 @@ end
 
 function _Spell:ValidTarget(target)
     local source = self.DrawSourceFunction ~= nil and self.DrawSource or self.Source
-    return IsValidTarget(target, math.huge, self.IsForEnemies) and GetDistanceSqr(source, target) <= self.Range * self.Range
+    return IsValidTarget(target, math.huge, self.IsForEnemies) and GetDistanceSqr(source, target) <= math.pow(self.Range + self.Width, 2)
 end
 
 function _Spell:ObjectsInArea(objects)
@@ -1041,7 +1049,7 @@ function _Spell:Damage(target, stage)
             return getDmg(self.DamageName, target, myHero, stage) + getDmg("AD", target, myHero, stage)
         end
         if self.DamageFunction ~= nil then
-            return self.DamageFunction(self.DamageName, target, myHero, stage)
+            return self.DamageFunction(self.DamageName, target)
         end
         if self.DamageName == "SMITE" then
             if IsValidTarget(target) then
@@ -1283,44 +1291,59 @@ end
 --CLASS: _Prediction
 function _Prediction:__init()
     self.PredictionList = {}
+    self.Actives = {
+        ["VPrediction"] = false,
+        ["HPrediction"] = false,
+        ["DivinePred"] = false,
+        ["SPrediction"] = false,
+        ["Prodiction"] = false,
+    }
     if FileExist(LIB_PATH.."VPrediction.lua") then
         self.VP = VPrediction() 
         self.VP.projectilespeeds = {["Velkoz"]= 2000, ["TeemoMushroom"] = math.huge, ["TestCubeRender"] = math.huge ,["Xerath"] = 2000.0000 ,["Kassadin"] = math.huge ,["Rengar"] = math.huge ,["Thresh"] = 1000.0000 ,["Ziggs"] = 1500.0000 ,["ZyraPassive"] = 1500.0000 ,["ZyraThornPlant"] = 1500.0000 ,["KogMaw"] = 1800.0000 ,["HeimerTBlue"] = 1599.3999 ,["EliseSpider"] = 500.0000 ,["Skarner"] = 500.0000 ,["ChaosNexus"] = 500.0000 ,["Katarina"] = 467.0000 ,["Riven"] = 347.79999 ,["SightWard"] = 347.79999 ,["HeimerTYellow"] = 1599.3999 ,["Ashe"] = 2000.0000 ,["VisionWard"] = 2000.0000 ,["TT_NGolem2"] = math.huge ,["ThreshLantern"] = math.huge ,["TT_Spiderboss"] = math.huge ,["OrderNexus"] = math.huge ,["Soraka"] = 1000.0000 ,["Jinx"] = 2750.0000 ,["TestCubeRenderwCollision"] = 2750.0000 ,["Red_Minion_Wizard"] = 650.0000 ,["JarvanIV"] = 20.0000 ,["Blue_Minion_Wizard"] = 650.0000 ,["TT_ChaosTurret2"] = 1200.0000 ,["TT_ChaosTurret3"] = 1200.0000 ,["TT_ChaosTurret1"] = 1200.0000 ,["ChaosTurretGiant"] = 1200.0000 ,["Dragon"] = 1200.0000 ,["LuluSnowman"] = 1200.0000 ,["Worm"] = 1200.0000 ,["ChaosTurretWorm"] = 1200.0000 ,["TT_ChaosInhibitor"] = 1200.0000 ,["ChaosTurretNormal"] = 1200.0000 ,["AncientGolem"] = 500.0000 ,["ZyraGraspingPlant"] = 500.0000 ,["HA_AP_OrderTurret3"] = 1200.0000 ,["HA_AP_OrderTurret2"] = 1200.0000 ,["Tryndamere"] = 347.79999 ,["OrderTurretNormal2"] = 1200.0000 ,["Singed"] = 700.0000 ,["OrderInhibitor"] = 700.0000 ,["Diana"] = 347.79999 ,["HA_FB_HealthRelic"] = 347.79999 ,["TT_OrderInhibitor"] = 347.79999 ,["GreatWraith"] = 750.0000 ,["Yasuo"] = 347.79999 ,["OrderTurretDragon"] = 1200.0000 ,["OrderTurretNormal"] = 1200.0000 ,["LizardElder"] = 500.0000 ,["HA_AP_ChaosTurret"] = 1200.0000 ,["Ahri"] = 1750.0000 ,["Lulu"] = 1450.0000 ,["ChaosInhibitor"] = 1450.0000 ,["HA_AP_ChaosTurret3"] = 1200.0000 ,["HA_AP_ChaosTurret2"] = 1200.0000 ,["ChaosTurretWorm2"] = 1200.0000 ,["TT_OrderTurret1"] = 1200.0000 ,["TT_OrderTurret2"] = 1200.0000 ,["TT_OrderTurret3"] = 1200.0000 ,["LuluFaerie"] = 1200.0000 ,["HA_AP_OrderTurret"] = 1200.0000 ,["OrderTurretAngel"] = 1200.0000 ,["YellowTrinketUpgrade"] = 1200.0000 ,["MasterYi"] = math.huge ,["Lissandra"] = 2000.0000 ,["ARAMOrderTurretNexus"] = 1200.0000 ,["Draven"] = 1700.0000 ,["FiddleSticks"] = 1750.0000 ,["SmallGolem"] = math.huge ,["ARAMOrderTurretFront"] = 1200.0000 ,["ChaosTurretTutorial"] = 1200.0000 ,["NasusUlt"] = 1200.0000 ,["Maokai"] = math.huge ,["Wraith"] = 750.0000 ,["Wolf"] = math.huge ,["Sivir"] = 1750.0000 ,["Corki"] = 2000.0000 ,["Janna"] = 1200.0000 ,["Nasus"] = math.huge ,["Golem"] = math.huge ,["ARAMChaosTurretFront"] = 1200.0000 ,["ARAMOrderTurretInhib"] = 1200.0000 ,["LeeSin"] = math.huge ,["HA_AP_ChaosTurretTutorial"] = 1200.0000 ,["GiantWolf"] = math.huge ,["HA_AP_OrderTurretTutorial"] = 1200.0000 ,["YoungLizard"] = 750.0000 ,["Jax"] = 400.0000 ,["LesserWraith"] = math.huge ,["Blitzcrank"] = math.huge ,["ARAMChaosTurretInhib"] = 1200.0000 ,["Shen"] = 400.0000 ,["Nocturne"] = math.huge ,["Sona"] = 1500.0000 ,["ARAMChaosTurretNexus"] = 1200.0000 ,["YellowTrinket"] = 1200.0000 ,["OrderTurretTutorial"] = 1200.0000 ,["Caitlyn"] = 2500.0000 ,["Trundle"] = 347.79999 ,["Malphite"] = 1000.0000 ,["Mordekaiser"] = math.huge ,["ZyraSeed"] = math.huge ,["Vi"] = 1000.0000 ,["Tutorial_Red_Minion_Wizard"] = 650.0000 ,["Renekton"] = math.huge ,["Anivia"] = 1400.0000 ,["Fizz"] = math.huge ,["Heimerdinger"] = 1500.0000 ,["Evelynn"] = 467.0000 ,["Rumble"] = 347.79999 ,["Leblanc"] = 1700.0000 ,["Darius"] = math.huge ,["OlafAxe"] = math.huge ,["Viktor"] = 2300.0000 ,["XinZhao"] = 20.0000 ,["Orianna"] = 1450.0000 ,["Vladimir"] = 1400.0000 ,["Nidalee"] = 1750.0000 ,["Tutorial_Red_Minion_Basic"] = math.huge ,["ZedShadow"] = 467.0000 ,["Syndra"] = 1800.0000 ,["Zac"] = 1000.0000 ,["Olaf"] = 347.79999 ,["Veigar"] = 1100.0000 ,["Twitch"] = 2500.0000 ,["Alistar"] = math.huge ,["Akali"] = 467.0000 ,["Urgot"] = 1300.0000 ,["Leona"] = 347.79999 ,["Talon"] = math.huge ,["Karma"] = 1500.0000 ,["Jayce"] = 347.79999 ,["Galio"] = 1000.0000 ,["Shaco"] = math.huge ,["Taric"] = math.huge ,["TwistedFate"] = 1500.0000 ,["Varus"] = 2000.0000 ,["Garen"] = 347.79999 ,["Swain"] = 1600.0000 ,["Vayne"] = 2000.0000 ,["Fiora"] = 467.0000 ,["Quinn"] = 2000.0000 ,["Kayle"] = math.huge ,["Blue_Minion_Basic"] = math.huge ,["Brand"] = 2000.0000 ,["Teemo"] = 1300.0000 ,["Amumu"] = 500.0000 ,["Annie"] = 1200.0000 ,["Odin_Blue_Minion_caster"] = 1200.0000 ,["Elise"] = 1600.0000 ,["Nami"] = 1500.0000 ,["Poppy"] = 500.0000 ,["AniviaEgg"] = 500.0000 ,["Tristana"] = 2250.0000 ,["Graves"] = 3000.0000 ,["Morgana"] = 1600.0000 ,["Gragas"] = math.huge ,["MissFortune"] = 2000.0000 ,["Warwick"] = math.huge ,["Cassiopeia"] = 1200.0000 ,["Tutorial_Blue_Minion_Wizard"] = 650.0000 ,["DrMundo"] = math.huge ,["Volibear"] = 467.0000 ,["Irelia"] = 467.0000 ,["Odin_Red_Minion_Caster"] = 650.0000 ,["Lucian"] = 2800.0000 ,["Yorick"] = math.huge ,["RammusPB"] = math.huge ,["Red_Minion_Basic"] = math.huge ,["Udyr"] = 467.0000 ,["MonkeyKing"] = 20.0000 ,["Tutorial_Blue_Minion_Basic"] = math.huge ,["Kennen"] = 1600.0000 ,["Nunu"] = 500.0000 ,["Ryze"] = 2400.0000 ,["Zed"] = 467.0000 ,["Nautilus"] = 1000.0000 ,["Gangplank"] = 1000.0000 ,["Lux"] = 1600.0000 ,["Sejuani"] = 500.0000 ,["Ezreal"] = 2000.0000 ,["OdinNeutralGuardian"] = 1800.0000 ,["Khazix"] = 500.0000 ,["Sion"] = math.huge ,["Aatrox"] = 347.79999 ,["Hecarim"] = 500.0000 ,["Pantheon"] = 20.0000 ,["Shyvana"] = 467.0000 ,["Zyra"] = 1700.0000 ,["Karthus"] = 1200.0000 ,["Rammus"] = math.huge ,["Zilean"] = 1200.0000 ,["Chogath"] = 500.0000 ,["Malzahar"] = 2000.0000 ,["YorickRavenousGhoul"] = 347.79999 ,["YorickSpectralGhoul"] = 347.79999 ,["JinxMine"] = 347.79999 ,["YorickDecayedGhoul"] = 347.79999 ,["XerathArcaneBarrageLauncher"] = 347.79999 ,["Odin_SOG_Order_Crystal"] = 347.79999 ,["TestCube"] = 347.79999 ,["ShyvanaDragon"] = math.huge ,["FizzBait"] = math.huge ,["Blue_Minion_MechMelee"] = math.huge ,["OdinQuestBuff"] = math.huge ,["TT_Buffplat_L"] = math.huge ,["TT_Buffplat_R"] = math.huge ,["KogMawDead"] = math.huge ,["TempMovableChar"] = math.huge ,["Lizard"] = 500.0000 ,["GolemOdin"] = math.huge ,["OdinOpeningBarrier"] = math.huge ,["TT_ChaosTurret4"] = 500.0000 ,["TT_Flytrap_A"] = 500.0000 ,["TT_NWolf"] = math.huge ,["OdinShieldRelic"] = math.huge ,["LuluSquill"] = math.huge ,["redDragon"] = math.huge ,["MonkeyKingClone"] = math.huge ,["Odin_skeleton"] = math.huge ,["OdinChaosTurretShrine"] = 500.0000 ,["Cassiopeia_Death"] = 500.0000 ,["OdinCenterRelic"] = 500.0000 ,["OdinRedSuperminion"] = math.huge ,["JarvanIVWall"] = math.huge ,["ARAMOrderNexus"] = math.huge ,["Red_Minion_MechCannon"] = 1200.0000 ,["OdinBlueSuperminion"] = math.huge ,["SyndraOrbs"] = math.huge ,["LuluKitty"] = math.huge ,["SwainNoBird"] = math.huge ,["LuluLadybug"] = math.huge ,["CaitlynTrap"] = math.huge ,["TT_Shroom_A"] = math.huge ,["ARAMChaosTurretShrine"] = 500.0000 ,["Odin_Windmill_Propellers"] = 500.0000 ,["TT_NWolf2"] = math.huge ,["OdinMinionGraveyardPortal"] = math.huge ,["SwainBeam"] = math.huge ,["Summoner_Rider_Order"] = math.huge ,["TT_Relic"] = math.huge ,["odin_lifts_crystal"] = math.huge ,["OdinOrderTurretShrine"] = 500.0000 ,["SpellBook1"] = 500.0000 ,["Blue_Minion_MechCannon"] = 1200.0000 ,["TT_ChaosInhibitor_D"] = 1200.0000 ,["Odin_SoG_Chaos"] = 1200.0000 ,["TrundleWall"] = 1200.0000 ,["HA_AP_HealthRelic"] = 1200.0000 ,["OrderTurretShrine"] = 500.0000 ,["OriannaBall"] = 500.0000 ,["ChaosTurretShrine"] = 500.0000 ,["LuluCupcake"] = 500.0000 ,["HA_AP_ChaosTurretShrine"] = 500.0000 ,["TT_NWraith2"] = 750.0000 ,["TT_Tree_A"] = 750.0000 ,["SummonerBeacon"] = 750.0000 ,["Odin_Drill"] = 750.0000 ,["TT_NGolem"] = math.huge ,["AramSpeedShrine"] = math.huge ,["OriannaNoBall"] = math.huge ,["Odin_Minecart"] = math.huge ,["Summoner_Rider_Chaos"] = math.huge ,["OdinSpeedShrine"] = math.huge ,["TT_SpeedShrine"] = math.huge ,["odin_lifts_buckets"] = math.huge ,["OdinRockSaw"] = math.huge ,["OdinMinionSpawnPortal"] = math.huge ,["SyndraSphere"] = math.huge ,["Red_Minion_MechMelee"] = math.huge ,["SwainRaven"] = math.huge ,["crystal_platform"] = math.huge ,["MaokaiSproutling"] = math.huge ,["Urf"] = math.huge ,["TestCubeRender10Vision"] = math.huge ,["MalzaharVoidling"] = 500.0000 ,["GhostWard"] = 500.0000 ,["MonkeyKingFlying"] = 500.0000 ,["LuluPig"] = 500.0000 ,["AniviaIceBlock"] = 500.0000 ,["TT_OrderInhibitor_D"] = 500.0000 ,["Odin_SoG_Order"] = 500.0000 ,["RammusDBC"] = 500.0000 ,["FizzShark"] = 500.0000 ,["LuluDragon"] = 500.0000 ,["OdinTestCubeRender"] = 500.0000 ,["TT_Tree1"] = 500.0000 ,["ARAMOrderTurretShrine"] = 500.0000 ,["Odin_Windmill_Gears"] = 500.0000 ,["ARAMChaosNexus"] = 500.0000 ,["TT_NWraith"] = 750.0000 ,["TT_OrderTurret4"] = 500.0000 ,["Odin_SOG_Chaos_Crystal"] = 500.0000 ,["OdinQuestIndicator"] = 500.0000 ,["JarvanIVStandard"] = 500.0000 ,["TT_DummyPusher"] = 500.0000 ,["OdinClaw"] = 500.0000 ,["EliseSpiderling"] = 2000.0000 ,["QuinnValor"] = math.huge ,["UdyrTigerUlt"] = math.huge ,["UdyrTurtleUlt"] = math.huge ,["UdyrUlt"] = math.huge ,["UdyrPhoenixUlt"] = math.huge ,["ShacoBox"] = 1500.0000 ,["HA_AP_Poro"] = 1500.0000 ,["AnnieTibbers"] = math.huge ,["UdyrPhoenix"] = math.huge ,["UdyrTurtle"] = math.huge ,["UdyrTiger"] = math.huge ,["HA_AP_OrderShrineTurret"] = 500.0000 ,["HA_AP_Chains_Long"] = 500.0000 ,["HA_AP_BridgeLaneStatue"] = 500.0000 ,["HA_AP_ChaosTurretRubble"] = 500.0000 ,["HA_AP_PoroSpawner"] = 500.0000 ,["HA_AP_Cutaway"] = 500.0000 ,["HA_AP_Chains"] = 500.0000 ,["ChaosInhibitor_D"] = 500.0000 ,["ZacRebirthBloblet"] = 500.0000 ,["OrderInhibitor_D"] = 500.0000 ,["Nidalee_Spear"] = 500.0000 ,["Nidalee_Cougar"] = 500.0000 ,["TT_Buffplat_Chain"] = 500.0000 ,["WriggleLantern"] = 500.0000 ,["TwistedLizardElder"] = 500.0000 ,["RabidWolf"] = math.huge ,["HeimerTGreen"] = 1599.3999 ,["HeimerTRed"] = 1599.3999 ,["ViktorFF"] = 1599.3999 ,["TwistedGolem"] = math.huge ,["TwistedSmallWolf"] = math.huge ,["TwistedGiantWolf"] = math.huge ,["TwistedTinyWraith"] = 750.0000 ,["TwistedBlueWraith"] = 750.0000 ,["TwistedYoungLizard"] = 750.0000 ,["Red_Minion_Melee"] = math.huge ,["Blue_Minion_Melee"] = math.huge ,["Blue_Minion_Healer"] = 1000.0000 ,["Ghast"] = 750.0000 ,["blueDragon"] = 800.0000 ,["Red_Minion_MechRange"] = 3000, ["SRU_OrderMinionRanged"] = 650, ["SRU_ChaosMinionRanged"] = 650, ["SRU_OrderMinionSiege"] = 1200, ["SRU_ChaosMinionSiege"] = 1200, ["SRUAP_Turret_Chaos1"]  = 1200, ["SRUAP_Turret_Chaos2"]  = 1200, ["SRUAP_Turret_Chaos3"] = 1200, ["SRUAP_Turret_Chaos4"] = 1200, ["SRUAP_Turret_Chaos5"] = 500, ["SRUAP_Turret_Order1"]  = 1200, ["SRUAP_Turret_Order2"]  = 1200, ["SRUAP_Turret_Order3"] = 1200, ["SRUAP_Turret_Order4"] = 1200, ["SRUAP_Turret_Order5"] = 500, ["Kalista"] = 2600}
         self.ProjectileSpeed = myHero.range > 300 and self.VP:GetProjectileSpeed(myHero) or math.huge
-        table.insert(self.PredictionList, "VPrediction") 
+        table.insert(self.PredictionList, "VPrediction")
+        self.Actives["VPrediction"] = true
     end
-    --if VIP_USER and FileExist(LIB_PATH.."Prodiction.lua") then require "Prodiction" table.insert(self.PredictionList, "Prodiction") end 
+    --[[if VIP_USER and FileExist(LIB_PATH.."Prodiction.lua") then 
+        require "Prodiction" 
+        table.insert(self.PredictionList, "Prodiction")
+        self.Actives["Prodiction"] = true
+    end ]]
     if FileExist(LIB_PATH.."HPrediction.lua") then
         require "HPrediction"
         table.insert(self.PredictionList, "HPrediction") 
+        self.Actives["HPrediction"] = true
     end
     if VIP_USER and FileExist(LIB_PATH.."DivinePred.lua") and FileExist(LIB_PATH.."DivinePred.luac") then
         require "DivinePred"
         table.insert(self.PredictionList, "DivinePred") 
+        self.Actives["DivinePred"] = true
     end
-    if FileExist(LIB_PATH.."SPrediction.lua") then
+    if FileExist(LIB_PATH.."SPrediction.lua") and FileExist(LIB_PATH.."Collision.lua") then
         require "SPrediction"
         table.insert(self.PredictionList, "SPrediction") 
+        self.Actives["SPrediction"] = true
     end
     self.LastRequest = 0
 end
 
 function _Prediction:LoadPredictions()
-    if FileExist(LIB_PATH.."HPrediction.lua") then 
+    if self.Actives["HPrediction"] then 
         DelayAction(function()
             if self.HP == nil then
                 self.HP = HPrediction()
             end
             end, 5)
     end
-    if VIP_USER and FileExist(LIB_PATH.."DivinePred.lua") and FileExist(LIB_PATH.."DivinePred.luac") then 
+    if self.Actives["DivinePred"] then 
         DelayAction(function() 
             if self.DP == nil then
                 self.DP = DivinePred()
             end
             end, 5)
     end
-    if FileExist(LIB_PATH.."SPrediction.lua") then 
+    if self.Actives["SPrediction"] then 
         DelayAction(function() 
             if self.SP == nil then
                 self.SP = SPrediction()
@@ -1467,7 +1490,7 @@ function _Prediction:GetPrediction(target, sp)
             end
         -- Prodiction
         elseif TypeOfPrediction == "Prodiction" then
-            --local aoe = false -- temp fix for prodiction
+            local aoe = false
             if aoe then
                 if skillshotType == SPELL_TYPE.LINEAR then
                     local pos, info, objects = Prodiction.GetLineAOEPrediction(target, range, speed, delay, width, source)
@@ -1582,17 +1605,7 @@ function _Prediction:GetPrediction(target, sp)
                 end
             end
         elseif TypeOfPrediction == "SPrediction" then
-            local tipo = "circular"
-            if skillshotType == SPELL_TYPE.LINEAR then
-                tipo = "linear"
-            elseif skillshotType == SPELL_TYPE.CIRCULAR then
-                tipo = "circular"
-            elseif skillshotType == SPELL_TYPE.CONE then
-                tipo = "cone"
-            end
-            local slot = sp.Slot ~= nil and sp.Slot or _Q
-            self.SP.SpellData[myHero.charName][slot] = { speed = speed, delay = delay, range = range, width = width, collision = collision, aoe = aoe, type = tipo}
-            local castpos, hitchance, pos = self.SP:Predict(slot, source, target)
+            local castpos, hitchance, pos = self.SP:Predict(target, range, speed, delay, width, collision, source)
             if hitchance >= self:AccuracyToHitChance(TypeOfPrediction, accuracy) then
                 return castpos, true, pos
             else
@@ -1643,6 +1656,69 @@ function _OrbwalkManager:__init()
     if FileExist(LIB_PATH .. "Big Fat Orbwalker.lua") then
         table.insert(self.OrbwalkList, "Big Fat Walk")
     end
+    self.NoAttacks = { 
+        jarvanivcataclysmattack = true, 
+        monkeykingdoubleattack = true, 
+        shyvanadoubleattack = true, 
+        shyvanadoubleattackdragon = true, 
+        zyragraspingplantattack = true, 
+        zyragraspingplantattack2 = true, 
+        zyragraspingplantattackfire = true, 
+        zyragraspingplantattack2fire = true, 
+        viktorpowertransfer = true, 
+        sivirwattackbounce = true,
+    }
+    self.Attacks = {
+        caitlynheadshotmissile = true, 
+        frostarrow = true, 
+        garenslash2 = true, 
+        kennenmegaproc = true, 
+        lucianpassiveattack = true, 
+        masteryidoublestrike = true, 
+        quinnwenhanced = true, 
+        renektonexecute = true, 
+        renektonsuperexecute = true, 
+        rengarnewpassivebuffdash = true, 
+        trundleq = true, 
+        xenzhaothrust = true, 
+        xenzhaothrust2 = true, 
+        xenzhaothrust3 = true, 
+        viktorqbuff = true,
+    }
+    self.Resets = {
+        dariusnoxiantacticsonh = true,
+        garenq = true,
+        hecarimrapidslash = true, 
+        jaxempowertwo = true, 
+        jaycehypercharge = true,
+        leonashieldofdaybreak = true, 
+        luciane = true, 
+        lucianq = true,
+        monkeykingdoubleattack = true, 
+        mordekaisermaceofspades = true, 
+        nasusq = true, 
+        nautiluspiercinggaze = true, 
+        netherblade = true,
+        parley = true, 
+        poppydevastatingblow = true, 
+        powerfist = true, 
+        renektonpreexecute = true, 
+        shyvanadoubleattack = true,
+        sivirw = true, 
+        takedown = true, 
+        talonnoxiandiplomacy = true, 
+        trundletrollsmash = true, 
+        vaynetumble = true, 
+        vie = true, 
+        volibearq = true,
+        xenzhaocombotarget = true, 
+        yorickspectral = true,
+        reksaiq = true,
+        riventricleave = true,
+        itemtiamatcleave = true,
+        fioraflurry = true, 
+        rengarq = true,
+    }
     self.Attack = true
     self.Move = true
     self.KeysMenu = nil
@@ -1719,6 +1795,14 @@ function _OrbwalkManager:GetOrbwalkSelected()
     return #self.OrbwalkList > 0 and tostring(self.OrbwalkList[int]) or nil
 end
 
+function _OrbwalkManager:IsAutoAttack(name)
+    return name and ((name:lower():find("attack") and not self.NoAttacks[name:lower()]) or self.Attacks[name:lower()])
+end
+
+function _OrbwalkManager:IsReset(name)
+    return name and self.Resets[name:lower()]
+end
+
 function _OrbwalkManager:LoadCommonKeys(m)
     local menu = nil
     if m == nil then
@@ -1740,7 +1824,7 @@ end
 
 function _OrbwalkManager:OnProcessSpell(unit, spell)
     if unit and unit.isMe and spell and spell.name then
-        if spell.name:lower():find("attack") then
+        if self:IsAutoAttack(spell.name) then
             if not self.DataUpdated then
                 self.BaseAnimationTime = 1 / (spell.animationTime * myHero.attackSpeed)
                 self.BaseWindUpTime = 1 / (spell.windUpTime * myHero.attackSpeed)
@@ -1749,7 +1833,7 @@ function _OrbwalkManager:OnProcessSpell(unit, spell)
             self.AA.LastTarget = spell.target
             self.AA.IsAttacking = true
             self.AA.LastTime = self:GetTime() - self:Latency()
-        elseif spell.name:lower():find("riventricleave") or spell.name:lower():find("fioraflurry") or spell.name:lower():find("tiamat") or spell.name:lower():find("hydra") then
+        elseif self:IsReset(spell.name) then
             self.GotReset = true
             DelayAction(
                 function()
@@ -1870,12 +1954,12 @@ function _OrbwalkManager:ShouldWait()
             for i, minion in pairs(self.EnemyMinions.objects) do
                 if self:InRange(minion) and not minion.dead then
                     local delay = _G.SpellManagerMenu ~= nil and _G.SpellManagerMenu.FarmDelay ~= nil and _G.SpellManagerMenu.FarmDelay or 0
-                    local ProjectileSpeed = myHero.range > 300 and Prediction.VP:GetProjectileSpeed(myHero) or math.huge
+                    local ProjectileSpeed = Prediction.VP:GetProjectileSpeed(myHero) or math.huge
                     local time = self:WindUpTime() + GetDistance(myHero.pos, minion.pos) / ProjectileSpeed + ExtraTime()
                     local predHealth = Prediction.VP:GetPredictedHealth(minion, time, delay)
                     local damage = Prediction.VP:CalcDamageOfAttack(myHero, minion, {name = "Basic"}, 0)
                     if predHealth > 0 then
-                        if damage > predHealth and predHealth < minion.health then
+                        if damage > predHealth * 0.9 and predHealth < minion.health then
                             return true
                         else
                             --[[
@@ -2232,7 +2316,8 @@ function _Evader:__init(menu)
             self.Menu:addParam(enemy.charName.."E", enemy.charName.." (E)", SCRIPT_PARAM_ONOFF, false)
             self.Menu:addParam(enemy.charName.."R", enemy.charName.." (R)", SCRIPT_PARAM_ONOFF, false)
         end
-        self.Menu:addParam("Time",  "Time Limit to Evade", SCRIPT_PARAM_SLICE, 0.7, 0, 8, 1)
+        self.Menu:addParam("Time",  "Time Limit to Evade", SCRIPT_PARAM_SLICE, 0.7, 0, 4, 1)
+        self.Menu:addParam("Humanizer",  "% of Humanizer", SCRIPT_PARAM_SLICE, 0, 0, 100)
         AddProcessSpellCallback(
             function(unit, spell)
                 if not myHero.dead and unit and spell and spell.name and not unit.isMe and unit.type and unit.team and GetDistanceSqr(myHero, unit) < 2000 * 2000 then
@@ -2244,8 +2329,10 @@ function _Evader:__init(menu)
                                     function() 
                                         table.insert(self.ActiveSpells, {Time = os.clock() - GetLatency() / 2000, Unit = unit, Spell = spell, SpellType = spelltype})
                                         self:CheckHitChampion(unit, spell, spelltype)
-                                    end, 
-                                spell.windUpTime * 1 / 4 - 2 * GetLatency() / 2000)
+                                    end
+                                , 
+                                    math.max(spell.windUpTime * self.Menu.Humanizer/100 - 2 * GetLatency() / 2000, 0)
+                                )
                             end
                         end
                     end
@@ -3092,8 +3179,6 @@ if _G.SimpleLibLoaded == nil then
     r:Check()
     if r:IsDownloading() then return end
     DelayAction(function() CheckUpdate() end, 5)
-    TargetSelector(TARGET_LESS_CAST_PRIORITY, 0)
-    DelayAction(function() _arrangePriorities() end, 12)
     OrbwalkManager = _OrbwalkManager()
     Prediction = _Prediction()
     CircleManager = _CircleManager()
